@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miffy Chat Detail</title>
+    <style>
+        /* === 基础变量与全局设定 (灰粉美学) === */
+        :root {
+            --app-bg: #f8f6f7;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --dusty-pink: #d4a5b4;
+            --dusty-pink-dark: #c08d9e;
+            --text-dark: #3a3637;
+            --text-gray: #a39ea0;
+            --border-color: rgba(212, 165, 180, 0.18);
+            --bubble-incoming: #ffffff;
+            --bubble-outgoing: #d4a5b4;
+            --bubble-incoming-border: rgba(255, 255, 255, 0.5);
+            --font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #e2dfdb; font-family: var(--font-family); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden;}
+        
+        .phone-screen {
+            width: 390px; height: 844px; background-color: var(--app-bg);
+            background-image: radial-gradient(circle at 0% 0%, #fff 0%, transparent 50%), radial-gradient(circle at 100% 100%, #f4eaec 0%, transparent 60%);
+            position: relative; overflow: hidden; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.1), inset 0 0 0 6px #fff;
+            display: flex; flex-direction: column;
+        }
+
+        /* 顶部状态栏 */
+        .status-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; font-size: 14px; font-weight: 600; color: var(--text-dark); position: relative; z-index: 100; }
+        .status-right { display: flex; align-items: center; gap: 6px; }
+        .css-battery { width: 22px; height: 11px; border: 1.5px solid var(--text-dark); border-radius: 4px; position: relative; padding: 1px; }
+        .css-battery::before { content: ''; display: block; width: 70%; height: 100%; background: var(--text-dark); border-radius: 1px; }
+        .css-battery::after { content: ''; position: absolute; right: -4px; top: 2px; width: 2px; height: 4px; background: var(--text-dark); border-radius: 0 2px 2px 0; }
+        .css-signal { display: flex; align-items: flex-end; gap: 1.5px; height: 10px; }
+        .css-signal span { width: 3px; background: var(--text-dark); border-radius: 2px;}
+        .css-signal span:nth-child(1) { height: 4px; } .css-signal span:nth-child(2) { height: 6px; } .css-signal span:nth-child(3) { height: 8px; } .css-signal span:nth-child(4) { height: 10px; }
+
+        /* 聊天顶栏 */
+        .chat-header {
+            padding: 5px 20px 15px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 50;
+        }
+        .header-left, .header-right { width: 40px; display: flex; align-items: center; }
+        .header-right { justify-content: flex-end; }
+        .header-center { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .chat-title { font-size: 16px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 6px; }
+        .online-dot { width: 6px; height: 6px; background-color: #a8d5a2; border-radius: 50%; }
+        .chat-subtitle { font-size: 11px; color: var(--text-gray); font-weight: 400; }
+
+        .i-back { width: 10px; height: 10px; border-left: 2px solid var(--text-dark); border-bottom: 2px solid var(--text-dark); transform: rotate(45deg); cursor: pointer; }
+        .back-link { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; text-decoration: none; }
+        .detail-link { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; text-decoration: none; }
+        .i-more { width: 4px; height: 4px; background: var(--text-dark); border-radius: 50%; box-shadow: -7px 0 0 var(--text-dark), 7px 0 0 var(--text-dark); cursor: pointer;}
+
+        /* 聊天主体 */
+        .chat-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; }
+        .chat-body::-webkit-scrollbar { display: none; }
+        .time-divider { align-self: center; font-size: 11px; color: var(--text-gray); background: rgba(212, 165, 180, 0.15); padding: 4px 12px; border-radius: 12px; margin: 10px 0; }
+        .msg-row { display: flex; align-items: flex-end; gap: 10px; max-width: 100%; }
+        .msg-avatar { width: 36px; height: 36px; border-radius: 12px; flex-shrink: 0; }
+        .av-winter { background: linear-gradient(135deg, #e0c3fc, #8ec5fc); }
+        .av-me { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
+        .avatar-label {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: inherit;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .bubble { padding: 12px 16px; font-size: 15px; line-height: 1.5; max-width: 70%; position: relative; word-break: break-word; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .incoming { justify-content: flex-start; }
+        .incoming .bubble { background-color: var(--bubble-incoming); color: var(--text-dark); border-radius: 18px 18px 18px 4px; border: 1px solid rgba(255,255,255,0.5); }
+        .outgoing { justify-content: flex-end; }
+        .outgoing .msg-avatar { order: 2; }
+        .outgoing .bubble { order: 1; }
+        .outgoing .bubble { background-color: var(--bubble-outgoing); color: #fff; border-radius: 18px 18px 4px 18px; }
+
+        .bubble-mode-soft .incoming .bubble {
+            border-radius: 20px 20px 20px 8px;
+            border-color: rgba(212, 165, 180, 0.15);
+        }
+        .bubble-mode-compact .incoming .bubble {
+            border-radius: 14px 14px 14px 4px;
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+        .bubble-mode-compact .outgoing .bubble {
+            border-radius: 14px 14px 4px 14px;
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+        .bubble-mode-dark .incoming .bubble {
+            background: #f5f2f3;
+            border-color: rgba(0,0,0,0.04);
+        }
+        .bubble-mode-light .outgoing .bubble {
+            background: linear-gradient(135deg, #e7b8c6, #d4a5b4);
+        }
+
+        .bubble-img { padding: 4px; background: var(--bubble-incoming); border-radius: 18px 18px 18px 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .css-photo { width: 160px; height: 200px; border-radius: 14px; background: linear-gradient(135deg, #cfd9df, #e2ebf0); position: relative; overflow: hidden; }
+        .css-photo::after { content:''; position:absolute; bottom:0; right:0; width:0; height:0; border-bottom: 50px solid rgba(255,255,255,0.2); border-left: 80px solid transparent; }
+        .css-photo::before { content:''; position:absolute; top:20px; left:20px; width:40px; height:40px; background: rgba(255,255,255,0.3); border-radius: 50%; filter: blur(10px); }
+
+        /* ========================================= */
+        /* === ✅ 优化后的底部输入栏与发送键 === */
+        /* ========================================= */
+        .chat-footer {
+            padding: 10px 20px 25px; display: flex; align-items: center; gap: 12px;
+            background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid var(--border-color); border-radius: 0 0 40px 40px; position: sticky; bottom: 0;
+        }
+
+        .footer-icon { width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; opacity: 0.7; }
+        
+        /* 加号图标 (移到了左边) */
+        .i-add { width: 22px; height: 22px; border: 2px solid var(--text-dark); border-radius: 50%; position: relative; }
+        .i-add::before, .i-add::after { content:''; position:absolute; background: var(--text-dark); border-radius: 2px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .i-add::before { width: 10px; height: 2px; } .i-add::after { width: 2px; height: 10px; }
+
+        /* 输入框包裹 (收纳了笑脸) */
+        .input-wrapper {
+            flex: 1;
+            min-height: 40px;
+            max-height: 96px;
+            background: #ffffff;
+            border: 1px solid rgba(212, 165, 180, 0.3);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            padding: 6px 12px 6px 15px;
+            gap: 8px;
+        }
+        .input-text {
+            flex: 1;
+            color: var(--text-dark);
+            font-size: 14px;
+            outline: none;
+            border: none;
+            resize: none;
+            line-height: 1.4;
+            min-height: 20px;
+            max-height: 76px;
+            background: transparent;
+            font-family: inherit;
+        }
+        .input-text::placeholder {
+            color: var(--text-gray);
+        }
+        
+        /* 表情图标 (收进输入框) */
+        .i-smile { width: 20px; height: 20px; border: 1.5px solid var(--text-gray); border-radius: 50%; position: relative; opacity: 0.8;}
+        .i-smile::before { content:''; position:absolute; top: 5px; left: 4px; width: 2px; height: 2px; background: var(--text-gray); border-radius: 50%; box-shadow: 6px 0 0 var(--text-gray); }
+        .i-smile::after { content:''; position:absolute; top: 9px; left: 5px; width: 6px; height: 3px; border: 1.5px solid var(--text-gray); border-top: none; border-radius: 0 0 8px 8px; }
+
+        /* 发送按钮底座 */
+        .send-btn {
+            width: 34px; height: 34px; background: var(--dusty-pink); border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(212, 165, 180, 0.4); cursor: pointer; transition: transform 0.2s;
+            border: none;
+        }
+        .send-btn:active { transform: scale(0.92); }
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing {
+            align-self: flex-start;
+            color: var(--text-gray);
+            font-size: 12px;
+            margin-top: -8px;
+            margin-left: 46px;
+            opacity: 0.9;
+        }
+
+        .chat-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 108px;
+            transform: translateX(-50%);
+            background: rgba(58, 54, 55, 0.92);
+            color: #fff;
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 200;
+        }
+        .chat-toast.show {
+            opacity: 1;
+        }
+
+        .floating-orb {
+            position: fixed;
+            right: 16px;
+            bottom: 110px;
+            width: 52px;
+            height: 52px;
+            border: none;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.2) 28%, transparent 58%),
+                linear-gradient(145deg, #e2b7c5 0%, #d4a5b4 55%, #be8e9f 100%);
+            box-shadow:
+                0 12px 22px rgba(192, 141, 158, 0.35),
+                inset 0 1px 1px rgba(255, 255, 255, 0.75),
+                inset 0 -6px 10px rgba(130, 86, 101, 0.2);
+            z-index: 80;
+            cursor: pointer;
+            touch-action: none;
+            user-select: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: orb-float 2.6s ease-in-out infinite;
+        }
+        .floating-orb.dragging {
+            cursor: grabbing;
+            animation: none;
+            transition: none;
+        }
+
+        .floating-orb::before {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+        }
+
+        .floating-orb:active {
+            transform: scale(0.95);
+            box-shadow:
+                0 8px 14px rgba(192, 141, 158, 0.3),
+                inset 0 1px 1px rgba(255, 255, 255, 0.65),
+                inset 0 -5px 8px rgba(130, 86, 101, 0.2);
+        }
+
+        @keyframes orb-float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        /* 纯 CSS 向上箭头 */
+        .i-arrow-up { position: relative; width: 14px; height: 14px; display: flex; justify-content: center; }
+        .i-arrow-up::before { content: ''; position: absolute; top: 2px; width: 7px; height: 7px; border-top: 2.5px solid #fff; border-left: 2.5px solid #fff; transform: rotate(45deg); border-radius: 1px; }
+        .i-arrow-up::after { content: ''; position: absolute; top: 3px; width: 2.5px; height: 10px; background: #fff; border-radius: 2px; }
+
+        .fab-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 22, 23, 0.35);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 180;
+        }
+        .fab-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .fab-panel {
+            width: min(92vw, 420px);
+            min-height: 300px;
+            border-radius: 24px;
+            background: linear-gradient(155deg, rgba(255,255,255,0.95), rgba(251,243,245,0.96));
+            border: 1px solid rgba(212, 165, 180, 0.35);
+            box-shadow: 0 20px 40px rgba(58, 54, 55, 0.18);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .fab-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .fab-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+        .fab-close {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            color: var(--text-gray);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .fab-desc {
+            color: var(--text-gray);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .fab-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .fab-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .fab-field label {
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+        .fab-field select {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 9px 10px;
+            background: #fff;
+            color: var(--text-dark);
+            font-size: 13px;
+        }
+        .fab-quick {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .fab-chip {
+            border: 1px solid rgba(212, 165, 180, 0.35);
+            background: #fff;
+            color: var(--dusty-pink-dark);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+        .fab-chip.active {
+            background: var(--dusty-pink-soft);
+            color: var(--text-dark);
+        }
+        .fab-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .fab-save {
+            border: 1px solid rgba(212, 165, 180, 0.35);
+            border-radius: 999px;
+            background: var(--dusty-pink-soft);
+            color: var(--dusty-pink-dark);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 14px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="phone-screen">
+        
+        <div class="status-bar">
+            <div>21:16</div>
+            <div class="status-right">
+                <div class="css-signal"><span></span><span></span><span></span><span></span></div>
+                <div class="css-battery"></div>
+            </div>
+        </div>
+
+        <header class="chat-header">
+            <div class="header-left"><a class="back-link" href="wechat.html" aria-label="返回微信主页"><div class="i-back"></div></a></div>
+            <div class="header-center">
+                <div class="chat-title" id="chatTitle">Winter <div class="online-dot"></div></div>
+                <div class="chat-subtitle" id="chatSubtitle">Active now</div>
+            </div>
+            <div class="header-right"><a class="detail-link" href="chat-settings.html" aria-label="聊天设置"><div class="i-more"></div></a></div>
+        </header>
+
+        <main class="chat-body">
+            <div class="time-divider">Yesterday 20:45</div>
+            <div class="msg-row incoming">
+                <div class="msg-avatar av-winter" id="incomingAvatar"><div class="avatar-label" id="incomingAvatarLabel">W</div></div>
+                <div class="bubble">明天还去那家新开的咖啡店吗？听说有很特别的粉色拿铁。</div>
+            </div>
+            <div class="msg-row outgoing">
+                <div class="bubble">去呀！我刚好整理完相册，明天一起带过去给你看。</div>
+                <div class="msg-avatar av-me" id="selfAvatar1"><div class="avatar-label" id="selfAvatarLabel1">M</div></div>
+            </div>
+            <div class="time-divider">21:12</div>
+            <div class="msg-row incoming">
+                <div class="msg-avatar av-winter" id="incomingAvatar2"><div class="avatar-label" id="incomingAvatarLabel2">W</div></div>
+                <div class="bubble-img"><div class="css-photo"></div></div>
+            </div>
+            <div class="msg-row incoming">
+                <div class="msg-avatar" style="visibility: hidden;"></div>
+                <div class="bubble">帮我看看这张氛围感还可以吗？刚调好的色调。</div>
+            </div>
+            <div class="msg-row outgoing">
+                <div class="bubble">太好看了吧！！完全是理想的清冷感，就是这种灰灰粉粉的调子！</div>
+                <div class="msg-avatar av-me" id="selfAvatar2"><div class="avatar-label" id="selfAvatarLabel2">M</div></div>
+            </div>
+        </main>
+
+        <!-- 优化后的底部输入栏 -->
+        <footer class="chat-footer">
+            <!-- 左侧：加号图标 -->
+            <div class="footer-icon"><div class="i-add"></div></div>
+            
+            <!-- 中间：输入框 (内含笑脸) -->
+            <div class="input-wrapper">
+                <textarea class="input-text" id="chatInput" placeholder="可输入多行，每行会作为一条消息"></textarea>
+                <div class="i-smile"></div>
+            </div>
+            
+            <!-- 右侧：发送按钮 (圆形粉底+向上箭头) -->
+            <button class="send-btn" id="sendBtn" type="button" aria-label="发送消息">
+                <div class="i-arrow-up"></div>
+            </button>
+        </footer>
+
+    </div>
+
+    <button class="floating-orb" id="floatingOrb" type="button" aria-label="悬浮球"></button>
+
+    <div class="fab-modal" id="fabModal" aria-hidden="true">
+        <div class="fab-panel" role="dialog" aria-modal="true" aria-labelledby="fabTitle">
+            <div class="fab-head">
+                <div class="fab-title" id="fabTitle">悬浮设置</div>
+                <button class="fab-close" id="fabClose" type="button" aria-label="关闭">×</button>
+            </div>
+            <div class="fab-desc">这里先放回复条数设置，后续功能可以继续往这个面板里加。</div>
+
+            <div class="fab-row">
+                <div class="fab-field">
+                    <label for="replyMin">最少回复条数</label>
+                    <select id="replyMin"></select>
+                </div>
+                <div class="fab-field">
+                    <label for="replyMax">最多回复条数</label>
+                    <select id="replyMax"></select>
+                </div>
+            </div>
+
+            <div class="fab-quick">
+                <button class="fab-chip" type="button" data-range="2-4">2-4 条</button>
+                <button class="fab-chip" type="button" data-range="2-6">2-6 条</button>
+                <button class="fab-chip" type="button" data-range="2-8">2-8 条</button>
+                <button class="fab-chip" type="button" data-range="3-10">3-10 条</button>
+            </div>
+
+            <div class="fab-footer">
+                <button class="fab-save" id="fabSave" type="button">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-toast" id="chatToast"></div>
+
+    <script src="prompt-config.js"></script>
+    <script>
+        (function() {
+            var STORAGE_KEY = "miffy_chat_settings_v1";
+            var PRESET_KEY = "api_presets";
+            var ACTIVE_PRESET_KEY = "api_active_preset";
+            var CHAT_HISTORY_KEY = "miffy_chat_history_v1";
+            var CHAT_HISTORY_MAX = 30;
+            var FAB_POSITION_KEY = "miffy_fab_position_v1";
+            var REPLY_COUNT_KEY = "miffy_reply_count_v1";
+            var titleEl = document.getElementById("chatTitle");
+            var subtitleEl = document.getElementById("chatSubtitle");
+            var chatBody = document.querySelector(".chat-body");
+            var incomingAvatar = document.getElementById("incomingAvatar");
+            var incomingAvatar2 = document.getElementById("incomingAvatar2");
+            var incomingAvatarLabel = document.getElementById("incomingAvatarLabel");
+            var incomingAvatarLabel2 = document.getElementById("incomingAvatarLabel2");
+            var selfAvatar1 = document.getElementById("selfAvatar1");
+            var selfAvatar2 = document.getElementById("selfAvatar2");
+            var selfAvatarLabel1 = document.getElementById("selfAvatarLabel1");
+            var selfAvatarLabel2 = document.getElementById("selfAvatarLabel2");
+            var sendBtn = document.getElementById("sendBtn");
+            var chatInput = document.getElementById("chatInput");
+            var toast = document.getElementById("chatToast");
+            var floatingOrb = document.getElementById("floatingOrb");
+            var fabModal = document.getElementById("fabModal");
+            var fabClose = document.getElementById("fabClose");
+            var fabSave = document.getElementById("fabSave");
+            var replyMinSelect = document.getElementById("replyMin");
+            var replyMaxSelect = document.getElementById("replyMax");
+            var rangeChips = Array.prototype.slice.call(document.querySelectorAll(".fab-chip"));
+
+            var chatState = {
+                title: "Winter",
+                avatarText: "W",
+                avatarGradient: "linear-gradient(135deg, #e0c3fc, #8ec5fc)",
+                avatarUrl: "",
+                selfName: "Miffy",
+                selfAvatarText: "M",
+                selfAvatarGradient: "linear-gradient(135deg, #ffecd2, #fcb69f)",
+                selfAvatarUrl: "",
+                history: [],
+                pendingUserCount: 0
+            };
+
+            function readJSON(key) {
+                try {
+                    var raw = localStorage.getItem(key);
+                    return raw ? JSON.parse(raw) : null;
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            function readText(key, fallback) {
+                var value = localStorage.getItem(key);
+                return value ? value : fallback;
+            }
+
+            function clamp(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            function buildNumberOptions(selectEl, min, max) {
+                if (!selectEl) {
+                    return;
+                }
+                var html = "";
+                for (var i = min; i <= max; i += 1) {
+                    html += '<option value="' + i + '">' + i + " 条</option>";
+                }
+                selectEl.innerHTML = html;
+            }
+
+            function readReplyCountRange() {
+                var fallback = { min: 2, max: 8 };
+                var raw = readJSON(REPLY_COUNT_KEY);
+                if (!raw) {
+                    return fallback;
+                }
+                var min = parseInt(raw.min, 10);
+                var max = parseInt(raw.max, 10);
+                if (!Number.isFinite(min) || !Number.isFinite(max)) {
+                    return fallback;
+                }
+                min = clamp(min, 1, 20);
+                max = clamp(max, min, 20);
+                return { min: min, max: max };
+            }
+
+            function saveReplyCountRange(range) {
+                localStorage.setItem(REPLY_COUNT_KEY, JSON.stringify(range));
+            }
+
+            function refreshRangeChips(min, max) {
+                rangeChips.forEach(function(chip) {
+                    var range = chip.getAttribute("data-range") || "";
+                    var parts = range.split("-");
+                    var active = parts.length === 2 && parseInt(parts[0], 10) === min && parseInt(parts[1], 10) === max;
+                    chip.classList.toggle("active", active);
+                });
+            }
+
+            function applyRangeToControls(min, max) {
+                replyMinSelect.value = String(min);
+                replyMaxSelect.value = String(max);
+                refreshRangeChips(min, max);
+            }
+
+            function normalizeRangeInputs() {
+                var min = clamp(parseInt(replyMinSelect.value, 10) || 2, 1, 20);
+                var max = clamp(parseInt(replyMaxSelect.value, 10) || 8, 1, 20);
+                if (max < min) {
+                    max = min;
+                }
+                applyRangeToControls(min, max);
+                return { min: min, max: max };
+            }
+
+            function openFabModal() {
+                if (!fabModal) {
+                    return;
+                }
+                var current = readReplyCountRange();
+                applyRangeToControls(current.min, current.max);
+                fabModal.classList.add("show");
+                fabModal.setAttribute("aria-hidden", "false");
+            }
+
+            function closeFabModal() {
+                if (!fabModal) {
+                    return;
+                }
+                fabModal.classList.remove("show");
+                fabModal.setAttribute("aria-hidden", "true");
+            }
+
+            function loadFabPosition() {
+                if (!floatingOrb) {
+                    return;
+                }
+                var saved = readJSON(FAB_POSITION_KEY);
+                if (!saved || !Number.isFinite(saved.left) || !Number.isFinite(saved.top)) {
+                    return;
+                }
+                floatingOrb.style.left = saved.left + "px";
+                floatingOrb.style.top = saved.top + "px";
+                floatingOrb.style.right = "auto";
+                floatingOrb.style.bottom = "auto";
+            }
+
+            function saveFabPosition(left, top) {
+                localStorage.setItem(FAB_POSITION_KEY, JSON.stringify({ left: left, top: top }));
+            }
+
+            function initFloatingOrb() {
+                if (!floatingOrb) {
+                    return;
+                }
+
+                loadFabPosition();
+                var drag = {
+                    active: false,
+                    moved: false,
+                    startX: 0,
+                    startY: 0,
+                    offsetX: 0,
+                    offsetY: 0
+                };
+
+                floatingOrb.addEventListener("pointerdown", function(event) {
+                    drag.active = true;
+                    drag.moved = false;
+                    floatingOrb.classList.add("dragging");
+
+                    var rect = floatingOrb.getBoundingClientRect();
+                    floatingOrb.style.left = rect.left + "px";
+                    floatingOrb.style.top = rect.top + "px";
+                    floatingOrb.style.right = "auto";
+                    floatingOrb.style.bottom = "auto";
+
+                    drag.offsetX = event.clientX - rect.left;
+                    drag.offsetY = event.clientY - rect.top;
+                    drag.startX = event.clientX;
+                    drag.startY = event.clientY;
+                    floatingOrb.setPointerCapture(event.pointerId);
+                });
+
+                floatingOrb.addEventListener("pointermove", function(event) {
+                    if (!drag.active) {
+                        return;
+                    }
+
+                    var left = event.clientX - drag.offsetX;
+                    var top = event.clientY - drag.offsetY;
+                    var maxLeft = window.innerWidth - floatingOrb.offsetWidth;
+                    var maxTop = window.innerHeight - floatingOrb.offsetHeight;
+                    left = clamp(left, 0, maxLeft);
+                    top = clamp(top, 0, maxTop);
+
+                    floatingOrb.style.left = left + "px";
+                    floatingOrb.style.top = top + "px";
+
+                    var dx = event.clientX - drag.startX;
+                    var dy = event.clientY - drag.startY;
+                    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+                        drag.moved = true;
+                    }
+                });
+
+                floatingOrb.addEventListener("pointerup", function(event) {
+                    if (!drag.active) {
+                        return;
+                    }
+
+                    drag.active = false;
+                    floatingOrb.classList.remove("dragging");
+                    floatingOrb.releasePointerCapture(event.pointerId);
+
+                    var rect = floatingOrb.getBoundingClientRect();
+                    saveFabPosition(rect.left, rect.top);
+
+                    if (!drag.moved) {
+                        openFabModal();
+                    }
+                });
+
+                floatingOrb.addEventListener("pointercancel", function() {
+                    drag.active = false;
+                    floatingOrb.classList.remove("dragging");
+                });
+
+                floatingOrb.addEventListener("click", function() {
+                    if (!drag.active && !drag.moved) {
+                        openFabModal();
+                    }
+                });
+            }
+
+            function trimHistory(list) {
+                return list.slice(-CHAT_HISTORY_MAX);
+            }
+
+            function loadHistory() {
+                var raw = readJSON(CHAT_HISTORY_KEY);
+                if (!Array.isArray(raw)) {
+                    return null;
+                }
+
+                return raw.filter(function(item) {
+                    return item && (item.role === "user" || item.role === "assistant") && typeof item.content === "string" && item.content.trim();
+                }).map(function(item) {
+                    return {
+                        role: item.role,
+                        content: item.content.trim()
+                    };
+                });
+            }
+
+            function saveHistory() {
+                chatState.history = trimHistory(chatState.history || []);
+                localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatState.history));
+            }
+
+            function computePendingUserCount(history) {
+                var count = 0;
+                for (var i = history.length - 1; i >= 0; i -= 1) {
+                    if (history[i].role === "user") {
+                        count += 1;
+                        continue;
+                    }
+                    break;
+                }
+                return count;
+            }
+
+            function renderHistoryFromStorage(history) {
+                if (!chatBody) {
+                    return;
+                }
+
+                Array.prototype.slice.call(chatBody.querySelectorAll(".msg-row, .time-divider, .typing")).forEach(function(node) {
+                    if (node && node.parentNode) {
+                        node.parentNode.removeChild(node);
+                    }
+                });
+
+                history.forEach(function(item) {
+                    addMessageRow(item.role, item.content);
+                });
+            }
+
+            function showToast(text) {
+                if (!toast) {
+                    return;
+                }
+                toast.textContent = text;
+                toast.classList.add("show");
+                window.clearTimeout(showToast._timer);
+                showToast._timer = window.setTimeout(function() {
+                    toast.classList.remove("show");
+                }, 1600);
+            }
+
+            function escapeHtml(str) {
+                if (str === null || str === undefined) {
+                    return "";
+                }
+                return String(str)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/\"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+
+            function extractAvatarText(name) {
+                var value = (name || "").trim();
+                if (!value) {
+                    return "W";
+                }
+                return value.slice(0, 1).toUpperCase();
+            }
+
+            function buildAvatarGradient(seedText) {
+                var seed = (seedText || "W").charCodeAt(0) || 87;
+                var hue = (seed * 29) % 360;
+                return "linear-gradient(135deg, hsl(" + hue + ", 62%, 78%), hsl(" + ((hue + 35) % 360) + ", 74%, 66%))";
+            }
+
+            function applyAvatarElement(el, labelEl, text, gradient, avatarUrl) {
+                if (!el) {
+                    return;
+                }
+
+                if (avatarUrl) {
+                    el.style.backgroundImage = 'url("' + avatarUrl.replace(/"/g, '\\"') + '")';
+                    el.style.backgroundSize = "cover";
+                    el.style.backgroundPosition = "center";
+                    if (labelEl) {
+                        labelEl.style.display = "none";
+                    }
+                    return;
+                }
+
+                el.style.backgroundImage = "none";
+                el.style.background = gradient;
+                if (labelEl) {
+                    labelEl.style.display = "flex";
+                    labelEl.textContent = text;
+                }
+            }
+
+            function applyHeaderAndStyle() {
+                var settings = readJSON(STORAGE_KEY);
+                if (!settings) {
+                    return;
+                }
+
+                var mode = settings.mode === "detail" ? "detail" : "simple";
+                var title = mode === "detail"
+                    ? (settings.detail && settings.detail.targetName) || "Winter"
+                    : (settings.simple && settings.simple.targetName) || "Winter";
+
+                var subtitle = mode === "detail"
+                    ? [settings.detail && settings.detail.targetRelation, settings.detail && settings.detail.targetRegion].filter(Boolean).join(" · ")
+                    : "简约模式 · " + ((settings.simple && settings.simple.callName) || "Miffy");
+
+                var previewTitle = readText(STORAGE_KEY + "_preview_name", title);
+                var previewSubtitle = readText(STORAGE_KEY + "_preview_subtitle", subtitle);
+                var targetAvatarText = extractAvatarText(previewTitle || title);
+                var selfName = mode === "detail"
+                    ? (settings.detail && settings.detail.selfName) || "Miffy"
+                    : (settings.simple && settings.simple.selfName) || "Miffy";
+                var selfAvatarText = extractAvatarText(selfName);
+                var bubbleIncomingStyle = mode === "detail" ? (settings.detail && settings.detail.bubbleIncoming) : null;
+                var bubbleOutgoingStyle = mode === "detail" ? (settings.detail && settings.detail.bubbleOutgoing) : null;
+                var avatarsRaw = settings.avatars || {};
+                var legacyAvatars = {
+                    targetUrl: avatarsRaw.targetUrl || "",
+                    selfUrl: avatarsRaw.selfUrl || ""
+                };
+                var simpleAvatars = Object.assign({}, legacyAvatars, avatarsRaw.simple || {});
+                var detailAvatars = Object.assign({}, avatarsRaw.detail || {});
+                var activeAvatars = mode === "detail" ? detailAvatars : simpleAvatars;
+                var targetAvatarUrl = activeAvatars.targetUrl || readText(STORAGE_KEY + "_avatar_target", "");
+                var selfAvatarUrl = activeAvatars.selfUrl || readText(STORAGE_KEY + "_avatar_self", "");
+
+                if (chatBody) {
+                    chatBody.classList.remove("bubble-mode-soft", "bubble-mode-compact", "bubble-mode-light", "bubble-mode-dark");
+
+                    if (bubbleIncomingStyle === "圆角柔和") {
+                        chatBody.classList.add("bubble-mode-soft");
+                    } else if (bubbleIncomingStyle === "紧凑简洁") {
+                        chatBody.classList.add("bubble-mode-compact");
+                    }
+
+                    if (bubbleOutgoingStyle === "淡粉高亮") {
+                        chatBody.classList.add("bubble-mode-light");
+                    } else if (bubbleOutgoingStyle === "极简深灰") {
+                        chatBody.classList.add("bubble-mode-dark");
+                    }
+                }
+
+                if (titleEl && previewTitle) {
+                    titleEl.childNodes[0].nodeValue = previewTitle + " ";
+                }
+                if (subtitleEl && previewSubtitle) {
+                    subtitleEl.textContent = previewSubtitle;
+                }
+
+                var avatarGradient = buildAvatarGradient(targetAvatarText);
+                var selfGradient = buildAvatarGradient(selfAvatarText);
+
+                applyAvatarElement(incomingAvatar, incomingAvatarLabel, targetAvatarText, avatarGradient, targetAvatarUrl);
+                applyAvatarElement(incomingAvatar2, incomingAvatarLabel2, targetAvatarText, avatarGradient, targetAvatarUrl);
+                applyAvatarElement(selfAvatar1, selfAvatarLabel1, selfAvatarText, selfGradient, selfAvatarUrl);
+                applyAvatarElement(selfAvatar2, selfAvatarLabel2, selfAvatarText, selfGradient, selfAvatarUrl);
+
+                chatState.title = previewTitle || title || "Winter";
+                chatState.avatarText = targetAvatarText;
+                chatState.avatarGradient = avatarGradient;
+                chatState.avatarUrl = targetAvatarUrl;
+                chatState.selfName = selfName;
+                chatState.selfAvatarText = selfAvatarText;
+                chatState.selfAvatarGradient = selfGradient;
+                chatState.selfAvatarUrl = selfAvatarUrl;
+            }
+
+            function addMessageRow(role, text) {
+                if (!chatBody || !text) {
+                    return;
+                }
+
+                var row = document.createElement("div");
+                row.className = "msg-row " + (role === "assistant" ? "incoming" : "outgoing");
+
+                if (role === "assistant") {
+                    row.innerHTML = '' +
+                        '<div class="msg-avatar"><div class="avatar-label"></div></div>' +
+                        '<div class="bubble">' + escapeHtml(text) + '</div>';
+                } else {
+                    row.innerHTML = '' +
+                        '<div class="bubble">' + escapeHtml(text) + '</div>' +
+                        '<div class="msg-avatar"><div class="avatar-label"></div></div>';
+                }
+
+                var avatarEl = row.querySelector(".msg-avatar");
+                var labelEl = row.querySelector(".avatar-label");
+                if (role === "assistant") {
+                    applyAvatarElement(avatarEl, labelEl, chatState.avatarText, chatState.avatarGradient, chatState.avatarUrl);
+                } else {
+                    applyAvatarElement(avatarEl, labelEl, chatState.selfAvatarText, chatState.selfAvatarGradient, chatState.selfAvatarUrl);
+                }
+
+                chatBody.appendChild(row);
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+
+            function setLoading(loading) {
+                if (!sendBtn) {
+                    return;
+                }
+                sendBtn.disabled = !!loading;
+                sendBtn.setAttribute("aria-busy", loading ? "true" : "false");
+            }
+
+            function collectVisibleHistory() {
+                if (!chatBody) {
+                    return [];
+                }
+
+                var rows = Array.prototype.slice.call(chatBody.querySelectorAll(".msg-row"));
+                return rows.map(function(row) {
+                    var bubble = row.querySelector(".bubble");
+                    if (!bubble) {
+                        return null;
+                    }
+                    var text = bubble.textContent.trim();
+                    if (!text) {
+                        return null;
+                    }
+                    var role = row.classList.contains("incoming") ? "assistant" : "user";
+                    return { role: role, content: text };
+                }).filter(Boolean);
+            }
+
+            function splitAssistantLines(raw) {
+                var cleaned = String(raw || "").replace(/\r/g, "").trim();
+                if (!cleaned) {
+                    return [];
+                }
+
+                var parts = cleaned
+                    .split(/\n{1,}/)
+                    .map(function(line) {
+                        return line
+                            .replace(/^[-*•]\s*/, "")
+                            .replace(/^\d+[\.、)\-]\s*/, "")
+                            .trim();
+                    })
+                    .filter(Boolean);
+
+                if (parts.length <= 1) {
+                    return [cleaned];
+                }
+                return parts.slice(0, 8);
+            }
+
+            function normalizeBaseUrl(url) {
+                var result = String(url || "").trim().replace(/\/+$/, "");
+                result = result.replace(/\/chat\/completions$/i, "");
+                result = result.replace(/\/completions$/i, "");
+                return result;
+            }
+
+            function getActivePreset() {
+                var presets = readJSON(PRESET_KEY) || [];
+                var activeId = localStorage.getItem(ACTIVE_PRESET_KEY);
+                if (!activeId) {
+                    return null;
+                }
+                for (var i = 0; i < presets.length; i += 1) {
+                    if (presets[i].id === activeId) {
+                        return presets[i];
+                    }
+                }
+                return null;
+            }
+
+            function fetchWithTimeout(url, options, timeoutMs) {
+                var controller = new AbortController();
+                var timer = window.setTimeout(function() {
+                    controller.abort();
+                }, timeoutMs || 30000);
+
+                var merged = Object.assign({}, options, { signal: controller.signal });
+                return fetch(url, merged)
+                    .finally(function() {
+                        window.clearTimeout(timer);
+                    })
+                    .catch(function(err) {
+                        if (err && err.name === "AbortError") {
+                            throw new Error("请求超时");
+                        }
+                        throw err;
+                    });
+            }
+
+            function callChatApi(preset, messages) {
+                var base = normalizeBaseUrl(preset.baseUrl);
+                var endpointCandidates = [
+                    base + "/chat/completions",
+                    base + "/v1/chat/completions"
+                ];
+                var idx = 0;
+
+                function tryNext(lastErr) {
+                    if (idx >= endpointCandidates.length) {
+                        return Promise.reject(lastErr || new Error("无法访问聊天接口"));
+                    }
+
+                    var url = endpointCandidates[idx++];
+                    return fetchWithTimeout(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + preset.apiKey
+                        },
+                        body: JSON.stringify({
+                            model: preset.model,
+                            messages: messages,
+                            temperature: 0.8
+                        })
+                    }, 45000)
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error("HTTP " + response.status + " @ " + url);
+                        }
+                        return response.json();
+                    })
+                    .catch(function(err) {
+                        return tryNext(err);
+                    });
+                }
+
+                return tryNext();
+            }
+
+            function parseAssistantContent(data) {
+                if (!data) {
+                    return "";
+                }
+
+                if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+                    return data.choices[0].message.content;
+                }
+                if (typeof data.reply === "string") {
+                    return data.reply;
+                }
+                if (typeof data.message === "string") {
+                    return data.message;
+                }
+                if (typeof data.output === "string") {
+                    return data.output;
+                }
+                if (Array.isArray(data.output_text)) {
+                    return data.output_text.join("\n");
+                }
+
+                return "";
+            }
+
+            function buildSystemPrompt() {
+                var settings = readJSON(STORAGE_KEY);
+                if (window.PinkPromptConfig && typeof window.PinkPromptConfig.buildSystemPrompt === "function") {
+                    return window.PinkPromptConfig.buildSystemPrompt(settings, chatState);
+                }
+
+                return [
+                    "你正在扮演聊天对象。",
+                    "对象昵称：" + (chatState.title || "对方"),
+                    "回复格式：每次 2-6 条短消息，换行分隔，不编号。"
+                ].join("\n");
+            }
+
+            function appendTyping() {
+                if (!chatBody) {
+                    return null;
+                }
+                var el = document.createElement("div");
+                el.className = "typing";
+                el.textContent = "对方正在输入...";
+                chatBody.appendChild(el);
+                chatBody.scrollTop = chatBody.scrollHeight;
+                return el;
+            }
+
+            function removeTyping(el) {
+                if (el && el.parentNode) {
+                    el.parentNode.removeChild(el);
+                }
+            }
+
+            function autoSizeInput() {
+                if (!chatInput) {
+                    return;
+                }
+                chatInput.style.height = "auto";
+                chatInput.style.height = Math.min(chatInput.scrollHeight, 76) + "px";
+            }
+
+            function sendMessages() {
+                var preset = getActivePreset();
+                if (!preset || !preset.baseUrl || !preset.apiKey || !preset.model) {
+                    showToast("请先在 API 配置里启用可用预设");
+                    return;
+                }
+
+                var rawInput = (chatInput.value || "").trim();
+
+                if (rawInput) {
+                    addMessageRow("user", rawInput);
+                    chatState.history.push({ role: "user", content: rawInput });
+                    chatState.history = trimHistory(chatState.history);
+                    chatState.pendingUserCount += 1;
+                    saveHistory();
+                    chatInput.value = "";
+                    autoSizeInput();
+                    return;
+                }
+
+                if (!chatState.pendingUserCount) {
+                    return;
+                }
+
+                setLoading(true);
+                var typingEl = appendTyping();
+                var messageWindow = chatState.history.slice(-24);
+                var payload = [{ role: "system", content: buildSystemPrompt() }].concat(messageWindow);
+
+                callChatApi(preset, payload)
+                    .then(function(data) {
+                        removeTyping(typingEl);
+                        var content = parseAssistantContent(data);
+                        var replies = splitAssistantLines(content);
+
+                        if (!replies.length) {
+                            replies = ["我刚刚有点走神啦，可以再说一次吗？"];
+                        }
+
+                        replies.forEach(function(reply) {
+                            addMessageRow("assistant", reply);
+                            chatState.history.push({ role: "assistant", content: reply });
+                        });
+
+                        chatState.history = trimHistory(chatState.history);
+                        chatState.pendingUserCount = 0;
+                        saveHistory();
+                    })
+                    .catch(function(error) {
+                        removeTyping(typingEl);
+                        showToast("发送失败：" + (error && error.message ? error.message : "未知错误"));
+                    })
+                    .finally(function() {
+                        setLoading(false);
+                    });
+            }
+
+            applyHeaderAndStyle();
+
+            var restoredHistory = loadHistory();
+            if (restoredHistory && restoredHistory.length) {
+                chatState.history = trimHistory(restoredHistory);
+                renderHistoryFromStorage(chatState.history);
+            } else {
+                chatState.history = trimHistory(collectVisibleHistory());
+                saveHistory();
+            }
+            chatState.pendingUserCount = computePendingUserCount(chatState.history);
+
+            if (chatInput) {
+                chatInput.addEventListener("input", autoSizeInput);
+                autoSizeInput();
+            }
+            if (sendBtn) {
+                sendBtn.addEventListener("click", sendMessages);
+            }
+
+            buildNumberOptions(replyMinSelect, 1, 20);
+            buildNumberOptions(replyMaxSelect, 1, 20);
+            var initialRange = readReplyCountRange();
+            applyRangeToControls(initialRange.min, initialRange.max);
+
+            if (replyMinSelect && replyMaxSelect) {
+                replyMinSelect.addEventListener("change", normalizeRangeInputs);
+                replyMaxSelect.addEventListener("change", normalizeRangeInputs);
+            }
+
+            rangeChips.forEach(function(chip) {
+                chip.addEventListener("click", function() {
+                    var parts = (chip.getAttribute("data-range") || "").split("-");
+                    if (parts.length !== 2) {
+                        return;
+                    }
+                    var min = clamp(parseInt(parts[0], 10) || 2, 1, 20);
+                    var max = clamp(parseInt(parts[1], 10) || 8, min, 20);
+                    applyRangeToControls(min, max);
+                });
+            });
+
+            if (fabSave) {
+                fabSave.addEventListener("click", function() {
+                    var range = normalizeRangeInputs();
+                    saveReplyCountRange(range);
+                    closeFabModal();
+                    showToast("回复条数已更新：" + range.min + "-" + range.max + " 条");
+                });
+            }
+
+            if (fabClose) {
+                fabClose.addEventListener("click", closeFabModal);
+            }
+            if (fabModal) {
+                fabModal.addEventListener("click", function(event) {
+                    if (event.target === fabModal) {
+                        closeFabModal();
+                    }
+                });
+            }
+
+            initFloatingOrb();
+        })();
+    </script>
+</body>
+</html>

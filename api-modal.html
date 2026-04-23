@@ -1,0 +1,55 @@
+<!-- API 配置面板 -->
+<div class="api-modal" id="apiModal">
+    <div class="api-panel">
+        <div class="api-head">
+            <div class="api-title">API 配置中心</div>
+            <button class="api-close" id="apiCloseBtn" type="button">x</button>
+        </div>
+
+        <div class="api-active-chip" id="apiActiveChip">当前启用：未选择</div>
+
+        <div class="api-form">
+            <div class="api-field">
+                <label for="presetName">预设名称</label>
+                <input class="api-input" id="presetName" placeholder="例如：OpenAI 备用" />
+            </div>
+            <div class="api-field">
+                <label for="apiBaseUrl">API URL</label>
+                <input class="api-input" id="apiBaseUrl" placeholder="https://example.com 或 https://host/v1" />
+            </div>
+            <div class="api-field">
+                <label for="apiKey">API Key</label>
+                <input class="api-input" id="apiKey" type="password" placeholder="sk-..." />
+            </div>
+            <div class="api-row">
+                <div class="api-field">
+                    <label for="apiModel">模型</label>
+                    <select class="api-select" id="apiModel">
+                        <option value="">请先拉取模型</option>
+                    </select>
+                </div>
+                <div class="api-field">
+                    <label for="apiType">兼容类型</label>
+                    <select class="api-select" id="apiType">
+                        <option value="openai">OpenAI 兼容</option>
+                        <option value="generic">Generic JSON</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-actions">
+            <button class="api-btn fetch" id="fetchModelsBtn" type="button">拉取模型</button>
+            <button class="api-btn save" id="savePresetBtn" type="button">保存预设</button>
+            <button class="api-btn clear" id="resetFormBtn" type="button">清空表单</button>
+            <button class="api-btn clear" id="closePanelBtn" type="button">完成并关闭</button>
+        </div>
+
+        <div class="api-msg" id="apiMsg"></div>
+
+        <div class="api-list-title">API 预设（点击条目即可启用）</div>
+        <div class="preset-list" id="presetList">
+            <div class="preset-empty">还没有预设，先保存一个吧</div>
+        </div>
+    </div>
+</div>

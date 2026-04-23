@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>粉灰主题手机桌面布局</title>
+<style>
+    /* 颜色变量定义 - 灰色与淡粉色调 */
+    :root {
+        --bg-color: #fcf4f5; /* 背景淡粉灰 */
+        --widget-bg: rgba(255, 255, 255, 0.85); /* 组件白底带透明度 */
+        --text-main: #6b6364; /* 主文本深灰 */
+        --text-sub: #a19899; /* 副文本浅灰 */
+        --pink-light: #f4d9dd; /* 浅粉色图标背景 */
+        --pink-dark: #dca3ad; /* 深一点的粉色点缀 */
+        --gray-light: #e3ddde; /* 浅灰色背景 */
+        --gray-dark: #8c8283; /* 深灰色图标 */
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #e0dcdc; /* 外围大背景 */
+    }
+
+    /* 手机主容器 */
+    .phone {
+        width: 375px;
+        height: 812px;
+        background-color: var(--bg-color);
+        border-radius: 40px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+        padding: 15px 20px;
+    }
+
+    /* 背景点缀小星星/心形 (使用CSS绘制) */
+    .bg-deco {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: var(--pink-light);
+        clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        opacity: 0.6;
+    }
+    .deco-1 { top: 12%; left: 10%; }
+    .deco-2 { top: 10%; right: 20%; background: var(--gray-light); width: 15px; height: 15px;}
+    .deco-3 { top: 30%; left: 5%; background: var(--pink-dark); width: 8px; height: 8px;}
+    .deco-4 { bottom: 20%; right: 15%; }
+
+    /* 状态栏 */
+    .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        font-weight: bold;
+        color: var(--text-main);
+        margin-bottom: 25px;
+        margin-top: 5px;
+    }
+    .status-right {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .status-right svg {
+        width: 16px;
+        height: 16px;
+        fill: var(--text-main);
+    }
+
+    /* 顶部个人卡片组件 */
+    .top-widget {
+        background: var(--widget-bg);
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(220, 163, 173, 0.1);
+        margin-bottom: 25px;
+        position: relative;
+    }
+    .top-widget .wifi-icon, .top-widget .bt-icon {
+        position: absolute;
+        top: 15px;
+        width: 14px;
+        height: 14px;
+        fill: var(--text-sub);
+    }
+    .top-widget .wifi-icon { left: 15px; }
+    .top-widget .bt-icon { right: 15px; }
+    
+    .avatar-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--gray-light);
+        margin: -40px auto 10px; /* 向上凸起效果 */
+        border: 4px solid var(--bg-color);
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .avatar-wrapper svg { width: 30px; fill: var(--gray-dark); }
+    
+    .name {
+        font-weight: bold;
+        color: var(--text-main);
+        font-size: 15px;
+        margin-bottom: 5px;
+    }
+    .quote {
+        font-size: 11px;
+        color: var(--text-sub);
+        margin-bottom: 15px;
+        letter-spacing: 1px;
+    }
+    .stats {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-main);
+    }
+    .stats span { color: var(--text-sub); margin-right: 2px;}
+
+    /* 中部网格区域 */
+    .grid-area {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    /* 左侧长条组件 */
+    .music-widget {
+        grid-column: span 2;
+        background: var(--widget-bg);
+        border-radius: 18px;
+        padding: 12px;
+        box-shadow: 0 5px 15px rgba(220, 163, 173, 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .music-top { display: flex; gap: 10px;}
+    .music-cover {
+        width: 45px;
+        height: 45px;
+        background: var(--gray-light);
+        border-radius: 5px;
+        border: 2px solid white;
+    }
+    .music-wave {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 15px;
+        margin-top: auto;
+    }
+    .wave-bar {
+        width: 2px;
+        background: var(--pink-dark);
+        border-radius: 1px;
+    }
+
+    /* 应用图标样式 */
+    .app-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+    .app-icon {
+        width: 55px;
+        height: 55px;
+        border-radius: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .app-name {
+        font-size: 11px;
+        color: var(--text-main);
+    }
+
+    /* 纯CSS/SVG重绘的图标 (粉灰主题) */
+    .icon-camera {
+        background: radial-gradient(circle at 30% 30%, #fff, var(--gray-light));
+    }
+    .icon-camera-inner {
+        width: 24px; height: 24px; border-radius: 50%;
+        background: var(--text-main); border: 2px solid #fff;
+    }
+    .icon-gallery {
+        background: conic-gradient(var(--pink-light) 0 90deg, var(--gray-light) 90deg 180deg, var(--pink-dark) 180deg 270deg, var(--text-sub) 270deg 360deg);
+    }
+    .icon-wechat {
+        background: var(--pink-light);
+    }
+    .icon-qq {
+        background: white; border: 1px solid var(--gray-light);
+    }
+
+    /* 底部散落图片区域 */
+    .scattered-area {
+        position: relative;
+        height: 180px;
+    }
+    .polaroid {
+        position: absolute;
+        background: white;
+        padding: 6px 6px 20px 6px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    .polaroid-img {
+        background: var(--gray-light);
+        width: 100%;
+        height: 100%;
+    }
+    .tape {
+        position: absolute;
+        width: 35px;
+        height: 12px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(0,0,0,0.05);
+        top: -6px;
+        left: 50%;
+        margin-left: -17px;
+        transform: rotate(-5deg);
+    }
+    .pic-left {
+        width: 100px; height: 100px;
+        left: 10px; top: 10px;
+        padding: 5px;
+    }
+    .pic-right {
+        width: 110px; height: 120px;
+        right: 15px; top: 20px;
+        transform: rotate(5deg);
+    }
+    .photo-stack {
+        position: absolute;
+        right: 15px;
+        top: 20px;
+        width: 125px;
+        height: 140px;
+    }
+    .photo-stack .polaroid {
+        width: 95px;
+        height: 110px;
+    }
+    .stack-back {
+        top: 8px;
+        left: 0;
+        transform: rotate(-8deg);
+        z-index: 1;
+    }
+    .stack-front {
+        top: 0;
+        left: 28px;
+        transform: rotate(7deg);
+        z-index: 2;
+    }
+    .photo-stack .polaroid-img {
+        background: linear-gradient(145deg, #dfd8da, #cfc7ca);
+    }
+
+    /* 分页点 */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }
+    .dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--gray-light);
+    }
+    .dot.active { background: var(--text-main); }
+
+    /* 底部毛玻璃 Dock */
+    .dock {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 25px;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(220, 163, 173, 0.15);
+        position: absolute;
+        bottom: 20px;
+        left: 15px;
+        right: 15px;
+    }
+    .dock-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .dock-phone { background: var(--pink-light); }
+    .dock-msg { background: var(--gray-light); }
+    .dock-browser { background: linear-gradient(135deg, var(--pink-light), var(--gray-light)); }
+    .dock-settings { background: var(--text-main); cursor: pointer; }
+
+    /* API 配置面板 */
+    .api-modal {
+        position: absolute;
+        inset: 0;
+        background: rgba(107, 99, 100, 0.22);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+    }
+    .api-modal.show {
+        display: flex;
+    }
+    .api-panel {
+        width: 100%;
+        height: 100%;
+        background: rgba(252, 244, 245, 0.96);
+        border-radius: 0;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .api-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--text-main);
+    }
+    .api-title {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+    }
+    .api-close {
+        width: 24px;
+        height: 24px;
+        border: none;
+        border-radius: 12px;
+        color: var(--text-main);
+        background: rgba(227, 221, 222, 0.9);
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 24px;
+        text-align: center;
+    }
+    .api-active-chip {
+        align-self: flex-start;
+        font-size: 10px;
+        color: var(--text-main);
+        background: rgba(220, 163, 173, 0.28);
+        border-radius: 999px;
+        padding: 4px 9px;
+    }
+    .api-form {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+    .api-field label {
+        display: block;
+        font-size: 10px;
+        color: var(--text-sub);
+        margin-bottom: 3px;
+        letter-spacing: 0.4px;
+    }
+    .api-input,
+    .api-select {
+        width: 100%;
+        border: 1px solid rgba(140, 130, 131, 0.22);
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        color: var(--text-main);
+        font-size: 12px;
+        padding: 9px 10px;
+        outline: none;
+    }
+    .api-input:focus,
+    .api-select:focus {
+        border-color: rgba(220, 163, 173, 0.8);
+        box-shadow: 0 0 0 2px rgba(244, 217, 221, 0.65);
+    }
+    .api-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+    }
+    .api-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+        margin-top: 2px;
+    }
+    .api-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 9px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-main);
+    }
+    .api-btn.fetch {
+        background: var(--gray-light);
+    }
+    .api-btn.save {
+        background: var(--pink-light);
+    }
+    .api-btn.clear {
+        background: rgba(227, 221, 222, 0.9);
+    }
+    .api-list-title {
+        margin-top: 4px;
+        color: var(--text-sub);
+        font-size: 10px;
+        letter-spacing: 0.5px;
+    }
+    .preset-list {
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(140, 130, 131, 0.16);
+        border-radius: 14px;
+        padding: 8px;
+        overflow-y: auto;
+        min-height: 70px;
+        max-height: 170px;
+    }
+    .preset-empty {
+        color: var(--text-sub);
+        font-size: 11px;
+        text-align: center;
+        padding: 12px 0;
+    }
+    .preset-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+        padding: 8px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        margin-bottom: 6px;
+        background: rgba(252, 244, 245, 0.75);
+    }
+    .preset-item:last-child {
+        margin-bottom: 0;
+    }
+    .preset-item.active {
+        border-color: rgba(220, 163, 173, 0.8);
+        background: rgba(244, 217, 221, 0.5);
+    }
+    .preset-main {
+        cursor: pointer;
+    }
+    .preset-name {
+        color: var(--text-main);
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .preset-meta {
+        color: var(--text-sub);
+        font-size: 9px;
+        margin-top: 2px;
+        word-break: break-all;
+    }
+    .preset-ops {
+        display: flex;
+        gap: 4px;
+    }
+    .preset-op {
+        border: none;
+        background: rgba(227, 221, 222, 0.95);
+        color: var(--text-main);
+        border-radius: 8px;
+        font-size: 10px;
+        padding: 5px 6px;
+        cursor: pointer;
+    }
+    .preset-op.del {
+        background: rgba(220, 163, 173, 0.35);
+    }
+    .api-msg {
+        font-size: 10px;
+        min-height: 14px;
+        color: var(--text-sub);
+    }
+
+</style>
+</head>
+<body>
+
+<div class="phone">
+    <!-- 背景装饰 -->
+    <div class="bg-deco deco-1"></div>
+    <div class="bg-deco deco-2"></div>
+    <div class="bg-deco deco-3"></div>
+    <div class="bg-deco deco-4"></div>
+
+    <!-- 状态栏 -->
+    <div class="status-bar">
+        <div class="time">21:15</div>
+        <div class="status-right">
+            <span style="font-size: 10px;">1.88 KB/s</span>
+            <!-- 信号SVG -->
+            <svg viewBox="0 0 24 24"><path d="M2 22h20V2L2 22z"/></svg>
+            <!-- 电池SVG -->
+            <svg viewBox="0 0 24 24" style="width: 20px;"><path d="M15.5 4H14V2h-4v2H8.5C7.67 4 7 4.67 7 5.5v15c0 .83.67 1.5 1.5 1.5h7c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5z"/></svg>
+        </div>
+    </div>
+
+    <!-- 顶部卡片 -->
+    <div class="top-widget">
+        <!-- WiFi/BT 装饰图标 -->
+        <svg class="wifi-icon" viewBox="0 0 24 24"><path d="M12 3C6.95 3 3.15 4.85 0 7.23L12 22 24 7.23C20.85 4.85 17.05 3 12 3zm0 13c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>
+        <svg class="bt-icon" viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+
+        <div class="avatar-wrapper">
+            <!-- 头像占位符(小兔形状替代) -->
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <div class="name">*Miffy*</div>
+        <div class="quote">* 雨也蒙蒙 你也萌萌 *</div>
+        <div class="stats">
+            <div><span>time:</span> 21:15</div>
+            <div><span>date:</span> 03-2</div>
+            <div><span>temp:</span> 16°C</div>
+            <div><span>setp:</span> 0</div>
+        </div>
+    </div>
+
+    <!-- 中部网格 -->
+    <div class="grid-area">
+        <!-- 音乐/文字组件 (占两列) -->
+        <div class="music-widget">
+            <div class="music-top">
+                <div class="music-cover"></div>
+                <div style="font-size: 8px; color: var(--text-sub); transform: scale(0.9); transform-origin: left top;">
+                    <div style="color:var(--text-main); font-weight:bold; margin-bottom:3px;">Winter * P*-*-*-*P</div>
+                    Travelling through ten thousand mirror snow...
+                </div>
+            </div>
+            <!-- 模拟音频波形 -->
+            <div class="music-wave">
+                <div class="wave-bar" style="height: 4px;"></div>
+                <div class="wave-bar" style="height: 10px;"></div>
+                <div class="wave-bar" style="height: 14px;"></div>
+                <div class="wave-bar" style="height: 8px;"></div>
+                <div class="wave-bar" style="height: 12px;"></div>
+                <div class="wave-bar" style="height: 6px;"></div>
+                <div class="wave-bar" style="height: 10px;"></div>
+                <div class="wave-bar" style="height: 4px;"></div>
+                <div class="wave-bar" style="height: 12px;"></div>
+                <div class="wave-bar" style="height: 15px;"></div>
+                <div class="wave-bar" style="height: 7px;"></div>
+            </div>
+        </div>
+
+        <div class="app-item">
+            <div class="app-icon icon-camera">
+                <div class="icon-camera-inner"></div>
+            </div>
+            <div class="app-name">相机</div>
+        </div>
+        <div class="app-item">
+            <div class="app-icon icon-gallery"></div>
+            <div class="app-name">相册</div>
+        </div>
+
+        <!-- 占位空白，让微信QQ换行 -->
+        <div style="grid-column: span 2;"></div>
+
+        <div class="app-item">
+            <div class="app-icon icon-wechat">
+                <!-- 纯白聊天气泡SVG -->
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+            </div>
+            <div class="app-name">微信</div>
+        </div>
+        <div class="app-item">
+            <div class="app-icon icon-qq">
+                <!-- 灰色企鹅轮廓SVG -->
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--text-main)"><path d="M12 2C8.69 2 6 4.69 6 8v3.58c-1.39 1.13-2 2.68-2 4.42 0 1.66.67 3.17 1.88 4.29L7.3 21.7c.3.3.77.3 1.07 0l1.41-1.41c.64.26 1.39.41 2.22.41s1.58-.15 2.22-.41l1.41 1.41c.3.3.77.3 1.07 0l1.42-1.42c1.21-1.12 1.88-2.63 1.88-4.29 0-1.74-.61-3.29-2-4.42V8c0-3.31-2.69-6-6-6zm0 16c-2.76 0-5-2.24-5-5 0-2.42 1.72-4.44 4-4.9V8c0-1.66 1.34-3 3-3s3 1.34 3 3v.1c2.28.46 4 2.48 4 4.9 0 2.76-2.24 5-5 5z"/></svg>
+            </div>
+            <div class="app-name">QQ</div>
+        </div>
+    </div>
+
+    <!-- 散落部件区域 -->
+    <div class="scattered-area">
+        <div class="polaroid pic-left">
+            <div class="tape" style="transform: rotate(10deg); top: -2px; left: 10px;"></div>
+            <div class="polaroid-img"></div>
+        </div>
+        <div class="photo-stack">
+            <div class="polaroid stack-back">
+                <div class="tape" style="transform: rotate(-10deg); left: 42%;"></div>
+                <div class="polaroid-img"></div>
+            </div>
+            <div class="polaroid stack-front">
+                <div class="tape" style="transform: rotate(6deg); left: 55%;"></div>
+                <div class="polaroid-img"></div>
+                <div style="text-align: right; font-size: 9px; color: var(--text-sub); margin-top: 4px;">Is you*</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页指示器 -->
+    <div class="pagination">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <!-- 底部Dock栏 -->
+    <div class="dock">
+        <div class="dock-icon dock-phone">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+        </div>
+        <div class="dock-icon dock-msg">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        </div>
+        <div class="dock-icon dock-browser">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </div>
+        <div class="dock-icon dock-settings" id="apiSettingsBtn" title="API配置">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+        </div>
+    </div>
+
+    <!-- API 配置面板 -->
+    <div class="api-modal" id="apiModal">
+        <div class="api-panel">
+            <div class="api-head">
+                <div class="api-title">API 配置中心</div>
+                <button class="api-close" id="apiCloseBtn" type="button">x</button>
+            </div>
+
+            <div class="api-active-chip" id="apiActiveChip">当前启用：未选择</div>
+
+            <div class="api-form">
+                <div class="api-field">
+                    <label for="presetName">预设名称</label>
+                    <input class="api-input" id="presetName" placeholder="例如：OpenAI 备用" />
+                </div>
+                <div class="api-field">
+                    <label for="apiBaseUrl">API URL</label>
+                    <input class="api-input" id="apiBaseUrl" placeholder="https://example.com 或 https://host/v1" />
+                </div>
+                <div class="api-field">
+                    <label for="apiKey">API Key</label>
+                    <input class="api-input" id="apiKey" type="password" placeholder="sk-..." />
+                </div>
+                <div class="api-row">
+                    <div class="api-field">
+                        <label for="apiModel">模型</label>
+                        <select class="api-select" id="apiModel">
+                            <option value="">请先拉取模型</option>
+                        </select>
+                    </div>
+                    <div class="api-field">
+                        <label for="apiType">兼容类型</label>
+                        <select class="api-select" id="apiType">
+                            <option value="openai">OpenAI 兼容</option>
+                            <option value="generic">Generic JSON</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-actions">
+                <button class="api-btn fetch" id="fetchModelsBtn" type="button">拉取模型</button>
+                <button class="api-btn save" id="savePresetBtn" type="button">保存预设</button>
+                <button class="api-btn clear" id="resetFormBtn" type="button">清空表单</button>
+                <button class="api-btn clear" id="closePanelBtn" type="button">完成并关闭</button>
+            </div>
+
+            <div class="api-msg" id="apiMsg"></div>
+
+            <div class="api-list-title">API 预设（点击条目即可启用）</div>
+            <div class="preset-list" id="presetList">
+                <div class="preset-empty">还没有预设，先保存一个吧</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    (function() {
+        var apiSettingsBtn = document.getElementById("apiSettingsBtn");
+        var apiModal = document.getElementById("apiModal");
+        var apiCloseBtn = document.getElementById("apiCloseBtn");
+        var closePanelBtn = document.getElementById("closePanelBtn");
+
+        function openModal() {
+            apiModal.classList.add("show");
+        }
+
+        function closeModal() {
+            apiModal.classList.remove("show");
+        }
+
+        apiSettingsBtn.addEventListener("click", openModal);
+        apiCloseBtn.addEventListener("click", closeModal);
+        closePanelBtn.addEventListener("click", closeModal);
+
+        apiModal.addEventListener("click", function(e) {
+            if (e.target === apiModal) {
+                closeModal();
+            }
+        });
+    })();
+</script>
+
+</body>
+</html>

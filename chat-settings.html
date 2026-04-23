@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>聊天设置</title>
+    <style>
+        :root {
+            --app-bg: #f8f6f7;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --dusty-pink: #d4a5b4;
+            --dusty-pink-dark: #c08d9e;
+            --dusty-pink-soft: #f4eaec;
+            --text-dark: #3a3637;
+            --text-gray: #a39ea0;
+            --border-color: rgba(212, 165, 180, 0.18);
+            --card-bg: #ffffff;
+            --danger: #c67c8f;
+            --font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: #e2dfdb;
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .phone-screen {
+            width: 390px;
+            height: 844px;
+            background-color: var(--app-bg);
+            background-image: radial-gradient(circle at 0% 0%, #fff 0%, transparent 50%), radial-gradient(circle at 100% 100%, #f4eaec 0%, transparent 60%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1), inset 0 0 0 6px #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            position: relative;
+            z-index: 100;
+        }
+        .status-right { display: flex; align-items: center; gap: 6px; }
+        .css-battery { width: 22px; height: 11px; border: 1.5px solid var(--text-dark); border-radius: 4px; position: relative; padding: 1px; }
+        .css-battery::before { content: ""; display: block; width: 70%; height: 100%; background: var(--text-dark); border-radius: 1px; }
+        .css-battery::after { content: ""; position: absolute; right: -4px; top: 2px; width: 2px; height: 4px; background: var(--text-dark); border-radius: 0 2px 2px 0; }
+        .css-signal { display: flex; align-items: flex-end; gap: 1.5px; height: 10px; }
+        .css-signal span { width: 3px; background: var(--text-dark); border-radius: 2px; }
+        .css-signal span:nth-child(1) { height: 4px; }
+        .css-signal span:nth-child(2) { height: 6px; }
+        .css-signal span:nth-child(3) { height: 8px; }
+        .css-signal span:nth-child(4) { height: 10px; }
+
+        .settings-header {
+            padding: 6px 20px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+        .back-link {
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        .i-back { width: 10px; height: 10px; border-left: 2px solid var(--text-dark); border-bottom: 2px solid var(--text-dark); transform: rotate(45deg); }
+        .settings-title { font-size: 17px; color: var(--text-dark); font-weight: 700; }
+        .save-btn {
+            border: 1px solid rgba(212, 165, 180, 0.35);
+            border-radius: 999px;
+            background: var(--dusty-pink-soft);
+            color: var(--dusty-pink-dark);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 10px;
+            line-height: 1;
+        }
+
+        .settings-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 16px 24px;
+            scrollbar-width: none;
+        }
+        .settings-body::-webkit-scrollbar { display: none; }
+
+        .mode-input {
+            display: none;
+        }
+        .mode-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .mode-tab {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.7);
+            color: var(--text-gray);
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            padding: 9px 0;
+        }
+        #mode-simple:checked ~ .mode-tabs .tab-simple,
+        #mode-detail:checked ~ .mode-tabs .tab-detail {
+            color: var(--text-dark);
+            background: var(--dusty-pink-soft);
+            border-color: rgba(212, 165, 180, 0.35);
+        }
+        .mode-panel {
+            display: none;
+        }
+        #mode-simple:checked ~ .mode-content .mode-simple-panel {
+            display: block;
+        }
+        #mode-detail:checked ~ .mode-content .mode-detail-panel {
+            display: block;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(212, 165, 180, 0.08);
+        }
+
+        .profile {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #e0c3fc, #8ec5fc);
+        }
+        .meta-title {
+            color: var(--text-dark);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .meta-sub {
+            color: var(--text-gray);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .field.full {
+            grid-column: 1 / -1;
+        }
+        .field label {
+            font-size: 11px;
+            color: var(--text-gray);
+        }
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--text-dark);
+            font-size: 13px;
+            padding: 9px 10px;
+            font-family: inherit;
+        }
+        .field textarea {
+            min-height: 66px;
+            resize: none;
+            line-height: 1.45;
+        }
+
+        .avatar-pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .avatar-box {
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: #fff;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .avatar-preview {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #e0c3fc, #8ec5fc);
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .avatar-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .avatar-actions input[type="file"] {
+            width: 100%;
+            font-size: 11px;
+        }
+
+        .section-title {
+            color: var(--text-dark);
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .bubble-preview {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .bubble-item {
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+        }
+        .bubble-left {
+            width: 62%;
+            border-radius: 12px 12px 12px 4px;
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 7px 10px;
+            color: var(--text-dark);
+            font-size: 12px;
+        }
+        .bubble-right {
+            width: 52%;
+            border-radius: 12px 12px 4px 12px;
+            background: var(--dusty-pink);
+            padding: 7px 10px;
+            color: #fff;
+            font-size: 12px;
+            text-align: right;
+        }
+        .tag {
+            font-size: 10px;
+            color: var(--text-gray);
+            background: var(--dusty-pink-soft);
+            padding: 4px 8px;
+            border-radius: 999px;
+        }
+
+        .save-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            background: rgba(58, 54, 55, 0.92);
+            color: #fff;
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 200;
+        }
+        .save-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        .danger-card {
+            background: linear-gradient(145deg, #fff, #fbf3f5);
+            border: 1px solid rgba(198,124,143,0.28);
+        }
+        .danger-title {
+            color: var(--danger);
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .danger-desc {
+            color: var(--text-gray);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .danger-btn {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            background: rgba(198,124,143,0.16);
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-screen">
+        <div class="status-bar">
+            <div>21:16</div>
+            <div class="status-right">
+                <div class="css-signal"><span></span><span></span><span></span><span></span></div>
+                <div class="css-battery"></div>
+            </div>
+        </div>
+
+        <header class="settings-header">
+            <a class="back-link" href="聊天界面.html" aria-label="返回聊天"><div class="i-back"></div></a>
+            <div class="settings-title">聊天设置</div>
+            <button class="save-btn" type="button" aria-label="保存">保存</button>
+        </header>
+
+        <main class="settings-body">
+            <input class="mode-input" type="radio" name="mode" id="mode-simple" checked>
+            <input class="mode-input" type="radio" name="mode" id="mode-detail">
+
+            <div class="mode-tabs">
+                <label class="mode-tab tab-simple" for="mode-simple">简约模式</label>
+                <label class="mode-tab tab-detail" for="mode-detail">详细模式</label>
+            </div>
+
+            <div class="mode-content">
+                <div class="mode-panel mode-simple-panel">
+                    <section class="card">
+                        <div class="section-title">聊天对象人设（简约）</div>
+                        <div class="meta-sub" style="margin-bottom: 8px;">简约模式只填写聊天对象核心人设。</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>对象昵称</label>
+                                <input id="simple-target-name" value="Winter" />
+                            </div>
+                            <div class="field">
+                                <label>常用称呼</label>
+                                <input id="simple-call-name" value="Miffy" />
+                            </div>
+                            <div class="field full">
+                                <label>一句话人设</label>
+                                <textarea id="simple-persona">温柔安静，偏爱灰粉色调，喜欢咖啡与摄影，聊天时语气自然柔和。</textarea>
+                            </div>
+                            <div class="field full">
+                                <label>禁忌 / 避免话题</label>
+                                <textarea id="simple-avoid">避免命令式语气，不讨论隐私敏感内容。</textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="section-title">我的人设（简约）</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>我的昵称</label>
+                                <input id="simple-self-name" value="Miffy" />
+                            </div>
+                            <div class="field">
+                                <label>我的身份</label>
+                                <input id="simple-self-tag" value="用户" />
+                            </div>
+                            <div class="field full">
+                                <label>我的一句话人设</label>
+                                <textarea id="simple-self-persona">喜欢记录日常和拍照，偏爱灰粉色系界面。</textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="section-title">头像设置（双方）</div>
+                        <div class="meta-sub">支持上传本地图片，或直接填写图片 URL。</div>
+                        <div class="avatar-pair">
+                            <div class="avatar-box">
+                                <div class="meta-title" style="font-size:13px; margin-bottom:0;">聊天对象头像</div>
+                                <div class="avatar-preview" id="simple-target-avatar-preview"></div>
+                                <div class="avatar-actions">
+                                    <input id="simple-target-avatar-file" type="file" accept="image/*" />
+                                </div>
+                                <div class="field">
+                                    <label>对象头像 URL</label>
+                                    <input id="simple-target-avatar-url" placeholder="https://..." />
+                                </div>
+                            </div>
+
+                            <div class="avatar-box">
+                                <div class="meta-title" style="font-size:13px; margin-bottom:0;">我的头像</div>
+                                <div class="avatar-preview" id="simple-self-avatar-preview" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);"></div>
+                                <div class="avatar-actions">
+                                    <input id="simple-self-avatar-file" type="file" accept="image/*" />
+                                </div>
+                                <div class="field">
+                                    <label>我的头像 URL</label>
+                                    <input id="simple-self-avatar-url" placeholder="https://..." />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="mode-panel mode-detail-panel">
+                    <section class="card">
+                        <div class="section-title">聊天对象信息</div>
+                        <div class="profile">
+                            <div class="avatar"></div>
+                            <div style="flex:1;">
+                                <div class="meta-title">对象基础资料</div>
+                                <div class="meta-sub">这些内容会随保存一起记录到本地。</div>
+                                <div class="form-grid">
+                                    <div class="field">
+                                        <label>昵称</label>
+                                        <input id="detail-target-name" value="Winter" />
+                                    </div>
+                                    <div class="field">
+                                        <label>用户 ID</label>
+                                        <input id="detail-target-id" value="winter.cloud" />
+                                    </div>
+                                    <div class="field">
+                                        <label>地区</label>
+                                        <input id="detail-target-region" value="上海" />
+                                    </div>
+                                    <div class="field">
+                                        <label>关系标签</label>
+                                        <input id="detail-target-relation" value="朋友" />
+                                    </div>
+                                    <div class="field full">
+                                        <label>备注</label>
+                                        <input id="detail-target-remark" value="共同好友 8 位" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="section-title">气泡样式</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>收到消息气泡</label>
+                                <select id="detail-bubble-incoming">
+                                    <option>默认</option>
+                                    <option>圆角柔和</option>
+                                    <option>紧凑简洁</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>发送消息气泡</label>
+                                <select id="detail-bubble-outgoing">
+                                    <option>粉灰主题</option>
+                                    <option>淡粉高亮</option>
+                                    <option>极简深灰</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="section-title">我的资料（用户）</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>我的昵称</label>
+                                <input id="detail-self-name" value="Miffy" />
+                            </div>
+                            <div class="field">
+                                <label>我的 ID</label>
+                                <input id="detail-self-id" value="miffy_yoo" />
+                            </div>
+                            <div class="field">
+                                <label>身份标签</label>
+                                <input id="detail-self-tag" value="用户" />
+                            </div>
+                            <div class="field">
+                                <label>显示头像</label>
+                                <input id="detail-self-avatar" value="Miffy 头像" />
+                            </div>
+                            <div class="field full">
+                                <label>个人简介</label>
+                                <textarea id="detail-self-bio">喜欢记录日常和拍照，偏爱灰粉色系界面。</textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="section-title">头像设置（详细模式）</div>
+                        <div class="meta-sub">详细模式可单独设置双方头像，不与简约模式互相覆盖。</div>
+                        <div class="avatar-pair">
+                            <div class="avatar-box">
+                                <div class="meta-title" style="font-size:13px; margin-bottom:0;">聊天对象头像</div>
+                                <div class="avatar-preview" id="detail-target-avatar-preview"></div>
+                                <div class="avatar-actions">
+                                    <input id="detail-target-avatar-file" type="file" accept="image/*" />
+                                </div>
+                                <div class="field">
+                                    <label>对象头像 URL</label>
+                                    <input id="detail-target-avatar-url" placeholder="https://..." />
+                                </div>
+                            </div>
+
+                            <div class="avatar-box">
+                                <div class="meta-title" style="font-size:13px; margin-bottom:0;">我的头像</div>
+                                <div class="avatar-preview" id="detail-self-avatar-preview" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);"></div>
+                                <div class="avatar-actions">
+                                    <input id="detail-self-avatar-file" type="file" accept="image/*" />
+                                </div>
+                                <div class="field">
+                                    <label>我的头像 URL</label>
+                                    <input id="detail-self-avatar-url" placeholder="https://..." />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="section-title">聊天对象人设（详细）</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>性格关键词</label>
+                                <input id="detail-persona-keywords" value="温柔 / 细腻 / 安静" />
+                            </div>
+                            <div class="field">
+                                <label>常用称呼</label>
+                                <input id="detail-persona-callname" value="Miffy" />
+                            </div>
+                            <div class="field">
+                                <label>说话风格</label>
+                                <select id="detail-persona-style">
+                                    <option selected>温和自然</option>
+                                    <option>活泼俏皮</option>
+                                    <option>克制简洁</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>回复节奏偏好</label>
+                                <select id="detail-persona-pace">
+                                    <option selected>实时短句</option>
+                                    <option>中等长度</option>
+                                    <option>详细解释</option>
+                                </select>
+                            </div>
+                            <div class="field full">
+                                <label>偏好话题</label>
+                                <textarea id="detail-persona-topics">咖啡店、摄影、天气、日常碎片。</textarea>
+                            </div>
+                            <div class="field full">
+                                <label>禁忌 / 避免话题</label>
+                                <textarea id="detail-persona-avoid">避免过度命令式语气，不讨论隐私敏感内容。</textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card danger-card">
+                        <div class="danger-title">拉黑对方</div>
+                        <div class="danger-desc">拉黑后将不再接收该联系人消息。此页面仅展示界面，不会执行实际操作。</div>
+                        <button class="danger-btn" type="button">加入黑名单</button>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="save-toast" id="saveToast">已保存</div>
+
+    <script>
+        (function() {
+            var STORAGE_KEY = "miffy_chat_settings_v1";
+            var saveButton = document.querySelector(".save-btn");
+            var toast = document.getElementById("saveToast");
+            var modeSimple = document.getElementById("mode-simple");
+            var modeDetail = document.getElementById("mode-detail");
+            var chatTitle = document.querySelector(".settings-title");
+
+            var fields = {
+                simple: {
+                    targetName: document.getElementById("simple-target-name"),
+                    callName: document.getElementById("simple-call-name"),
+                    persona: document.getElementById("simple-persona"),
+                    avoid: document.getElementById("simple-avoid"),
+                    selfName: document.getElementById("simple-self-name"),
+                    selfTag: document.getElementById("simple-self-tag"),
+                    selfPersona: document.getElementById("simple-self-persona")
+                },
+                detail: {
+                    targetName: document.getElementById("detail-target-name"),
+                    targetId: document.getElementById("detail-target-id"),
+                    targetRegion: document.getElementById("detail-target-region"),
+                    targetRelation: document.getElementById("detail-target-relation"),
+                    targetRemark: document.getElementById("detail-target-remark"),
+                    bubbleIncoming: document.getElementById("detail-bubble-incoming"),
+                    bubbleOutgoing: document.getElementById("detail-bubble-outgoing"),
+                    selfName: document.getElementById("detail-self-name"),
+                    selfId: document.getElementById("detail-self-id"),
+                    selfTag: document.getElementById("detail-self-tag"),
+                    selfAvatar: document.getElementById("detail-self-avatar"),
+                    selfBio: document.getElementById("detail-self-bio"),
+                    personaKeywords: document.getElementById("detail-persona-keywords"),
+                    personaCallName: document.getElementById("detail-persona-callname"),
+                    personaStyle: document.getElementById("detail-persona-style"),
+                    personaPace: document.getElementById("detail-persona-pace"),
+                    personaTopics: document.getElementById("detail-persona-topics"),
+                    personaAvoid: document.getElementById("detail-persona-avoid")
+                },
+                avatars: {
+                    simpleTargetUrl: document.getElementById("simple-target-avatar-url"),
+                    simpleSelfUrl: document.getElementById("simple-self-avatar-url"),
+                    simpleTargetFile: document.getElementById("simple-target-avatar-file"),
+                    simpleSelfFile: document.getElementById("simple-self-avatar-file"),
+                    simpleTargetPreview: document.getElementById("simple-target-avatar-preview"),
+                    simpleSelfPreview: document.getElementById("simple-self-avatar-preview"),
+                    detailTargetUrl: document.getElementById("detail-target-avatar-url"),
+                    detailSelfUrl: document.getElementById("detail-self-avatar-url"),
+                    detailTargetFile: document.getElementById("detail-target-avatar-file"),
+                    detailSelfFile: document.getElementById("detail-self-avatar-file"),
+                    detailTargetPreview: document.getElementById("detail-target-avatar-preview"),
+                    detailSelfPreview: document.getElementById("detail-self-avatar-preview")
+                }
+            };
+
+            var defaults = {
+                mode: "simple",
+                simple: {
+                    targetName: "Winter",
+                    callName: "Miffy",
+                    persona: "温柔安静，偏爱灰粉色调，喜欢咖啡与摄影，聊天时语气自然柔和。",
+                    avoid: "避免命令式语气，不讨论隐私敏感内容。",
+                    selfName: "Miffy",
+                    selfTag: "用户",
+                    selfPersona: "喜欢记录日常和拍照，偏爱灰粉色系界面。"
+                },
+                detail: {
+                    targetName: "Winter",
+                    targetId: "winter.cloud",
+                    targetRegion: "上海",
+                    targetRelation: "朋友",
+                    targetRemark: "共同好友 8 位",
+                    bubbleIncoming: "默认",
+                    bubbleOutgoing: "粉灰主题",
+                    selfName: "Miffy",
+                    selfId: "miffy_yoo",
+                    selfTag: "用户",
+                    selfAvatar: "Miffy 头像",
+                    selfBio: "喜欢记录日常和拍照，偏爱灰粉色系界面。",
+                    personaKeywords: "温柔 / 细腻 / 安静",
+                    personaCallName: "Miffy",
+                    personaStyle: "温和自然",
+                    personaPace: "实时短句",
+                    personaTopics: "咖啡店、摄影、天气、日常碎片。",
+                    personaAvoid: "避免过度命令式语气，不讨论隐私敏感内容。"
+                },
+                avatars: {
+                    simple: {
+                        targetUrl: "",
+                        selfUrl: ""
+                    },
+                    detail: {
+                        targetUrl: "",
+                        selfUrl: ""
+                    }
+                }
+            };
+
+            function applyAvatarPreview(element, url, fallback) {
+                if (!element) {
+                    return;
+                }
+                if (url) {
+                    element.style.backgroundImage = 'url("' + url.replace(/"/g, '\\"') + '")';
+                    element.style.backgroundColor = "#fff";
+                } else {
+                    element.style.backgroundImage = "none";
+                    element.style.background = fallback;
+                }
+            }
+
+            function bindFilePicker(inputEl, targetInput, previewEl, fallback) {
+                if (!inputEl || !targetInput) {
+                    return;
+                }
+                inputEl.addEventListener("change", function() {
+                    var file = inputEl.files && inputEl.files[0];
+                    if (!file) {
+                        return;
+                    }
+                    if (!file.type || file.type.indexOf("image/") !== 0) {
+                        return;
+                    }
+                    var reader = new FileReader();
+                    reader.onload = function() {
+                        var result = reader.result || "";
+                        targetInput.value = result;
+                        applyAvatarPreview(previewEl, result, fallback);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function loadSettings() {
+                try {
+                    var raw = localStorage.getItem(STORAGE_KEY);
+                    return raw ? JSON.parse(raw) : null;
+                } catch (error) {
+                    console.warn("Failed to parse chat settings:", error);
+                    return null;
+                }
+            }
+
+            function saveSettings(settings) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+                notifySaved();
+            }
+
+            function notifySaved() {
+                var previousText = saveButton.textContent;
+                saveButton.textContent = "已保存";
+                toast.classList.add("show");
+                window.clearTimeout(notifySaved._timer);
+                notifySaved._timer = window.setTimeout(function() {
+                    saveButton.textContent = previousText;
+                    toast.classList.remove("show");
+                }, 1200);
+            }
+
+            function applySettings(settings) {
+                var data = settings || defaults;
+                var mode = data.mode === "detail" ? "detail" : "simple";
+                modeSimple.checked = mode === "simple";
+                modeDetail.checked = mode === "detail";
+
+                var simple = Object.assign({}, defaults.simple, data.simple || {});
+                fields.simple.targetName.value = simple.targetName;
+                fields.simple.callName.value = simple.callName;
+                fields.simple.persona.value = simple.persona;
+                fields.simple.avoid.value = simple.avoid;
+                fields.simple.selfName.value = simple.selfName;
+                fields.simple.selfTag.value = simple.selfTag;
+                fields.simple.selfPersona.value = simple.selfPersona;
+
+                var detail = Object.assign({}, defaults.detail, data.detail || {});
+                fields.detail.targetName.value = detail.targetName;
+                fields.detail.targetId.value = detail.targetId;
+                fields.detail.targetRegion.value = detail.targetRegion;
+                fields.detail.targetRelation.value = detail.targetRelation;
+                fields.detail.targetRemark.value = detail.targetRemark;
+                fields.detail.bubbleIncoming.value = detail.bubbleIncoming;
+                fields.detail.bubbleOutgoing.value = detail.bubbleOutgoing;
+                fields.detail.selfName.value = detail.selfName;
+                fields.detail.selfId.value = detail.selfId;
+                fields.detail.selfTag.value = detail.selfTag;
+                fields.detail.selfAvatar.value = detail.selfAvatar;
+                fields.detail.selfBio.value = detail.selfBio;
+                fields.detail.personaKeywords.value = detail.personaKeywords;
+                fields.detail.personaCallName.value = detail.personaCallName;
+                fields.detail.personaStyle.value = detail.personaStyle;
+                fields.detail.personaPace.value = detail.personaPace;
+                fields.detail.personaTopics.value = detail.personaTopics;
+                fields.detail.personaAvoid.value = detail.personaAvoid;
+
+                var avatarsRaw = data.avatars || {};
+                var legacyAvatars = (avatarsRaw.targetUrl || avatarsRaw.selfUrl)
+                    ? { targetUrl: avatarsRaw.targetUrl || "", selfUrl: avatarsRaw.selfUrl || "" }
+                    : {};
+                var simpleAvatars = Object.assign({}, defaults.avatars.simple, legacyAvatars, avatarsRaw.simple || {});
+                var detailAvatars = Object.assign({}, defaults.avatars.detail, avatarsRaw.detail || {});
+
+                fields.avatars.simpleTargetUrl.value = simpleAvatars.targetUrl;
+                fields.avatars.simpleSelfUrl.value = simpleAvatars.selfUrl;
+                fields.avatars.detailTargetUrl.value = detailAvatars.targetUrl;
+                fields.avatars.detailSelfUrl.value = detailAvatars.selfUrl;
+
+                applyAvatarPreview(fields.avatars.simpleTargetPreview, simpleAvatars.targetUrl, "linear-gradient(135deg, #e0c3fc, #8ec5fc)");
+                applyAvatarPreview(fields.avatars.simpleSelfPreview, simpleAvatars.selfUrl, "linear-gradient(135deg, #ffecd2, #fcb69f)");
+                applyAvatarPreview(fields.avatars.detailTargetPreview, detailAvatars.targetUrl, "linear-gradient(135deg, #e0c3fc, #8ec5fc)");
+                applyAvatarPreview(fields.avatars.detailSelfPreview, detailAvatars.selfUrl, "linear-gradient(135deg, #ffecd2, #fcb69f)");
+
+                if (chatTitle) {
+                    chatTitle.textContent = "聊天设置";
+                }
+            }
+
+            function collectSettings() {
+                return {
+                    mode: modeDetail.checked ? "detail" : "simple",
+                    simple: {
+                        targetName: fields.simple.targetName.value.trim(),
+                        callName: fields.simple.callName.value.trim(),
+                        persona: fields.simple.persona.value.trim(),
+                        avoid: fields.simple.avoid.value.trim(),
+                        selfName: fields.simple.selfName.value.trim(),
+                        selfTag: fields.simple.selfTag.value.trim(),
+                        selfPersona: fields.simple.selfPersona.value.trim()
+                    },
+                    detail: {
+                        targetName: fields.detail.targetName.value.trim(),
+                        targetId: fields.detail.targetId.value.trim(),
+                        targetRegion: fields.detail.targetRegion.value.trim(),
+                        targetRelation: fields.detail.targetRelation.value.trim(),
+                        targetRemark: fields.detail.targetRemark.value.trim(),
+                        bubbleIncoming: fields.detail.bubbleIncoming.value,
+                        bubbleOutgoing: fields.detail.bubbleOutgoing.value,
+                        selfName: fields.detail.selfName.value.trim(),
+                        selfId: fields.detail.selfId.value.trim(),
+                        selfTag: fields.detail.selfTag.value.trim(),
+                        selfAvatar: fields.detail.selfAvatar.value.trim(),
+                        selfBio: fields.detail.selfBio.value.trim(),
+                        personaKeywords: fields.detail.personaKeywords.value.trim(),
+                        personaCallName: fields.detail.personaCallName.value.trim(),
+                        personaStyle: fields.detail.personaStyle.value,
+                        personaPace: fields.detail.personaPace.value,
+                        personaTopics: fields.detail.personaTopics.value.trim(),
+                        personaAvoid: fields.detail.personaAvoid.value.trim()
+                    },
+                    avatars: {
+                        simple: {
+                            targetUrl: fields.avatars.simpleTargetUrl.value.trim(),
+                            selfUrl: fields.avatars.simpleSelfUrl.value.trim()
+                        },
+                        detail: {
+                            targetUrl: fields.avatars.detailTargetUrl.value.trim(),
+                            selfUrl: fields.avatars.detailSelfUrl.value.trim()
+                        }
+                    }
+                };
+            }
+
+            function updateChatPreview(settings) {
+                var targetName = settings.mode === "detail" ? settings.detail.targetName : settings.simple.targetName;
+                var subtitle = settings.mode === "detail"
+                    ? [settings.detail.targetRelation, settings.detail.targetRegion].filter(Boolean).join(" · ")
+                    : "简约模式 · " + (settings.simple.callName || "");
+
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+                } catch (error) {
+                    console.warn("Failed to persist chat settings:", error);
+                }
+
+                if (targetName) {
+                    localStorage.setItem(STORAGE_KEY + "_preview_name", targetName);
+                }
+                if (subtitle) {
+                    localStorage.setItem(STORAGE_KEY + "_preview_subtitle", subtitle);
+                }
+
+                var activeMode = settings.mode === "detail" ? "detail" : "simple";
+                var activeAvatars = settings.avatars && settings.avatars[activeMode] ? settings.avatars[activeMode] : { targetUrl: "", selfUrl: "" };
+                localStorage.setItem(STORAGE_KEY + "_avatar_target", activeAvatars.targetUrl || "");
+                localStorage.setItem(STORAGE_KEY + "_avatar_self", activeAvatars.selfUrl || "");
+            }
+
+            applySettings(loadSettings());
+
+            fields.avatars.simpleTargetUrl.addEventListener("input", function() {
+                applyAvatarPreview(fields.avatars.simpleTargetPreview, fields.avatars.simpleTargetUrl.value.trim(), "linear-gradient(135deg, #e0c3fc, #8ec5fc)");
+            });
+            fields.avatars.simpleSelfUrl.addEventListener("input", function() {
+                applyAvatarPreview(fields.avatars.simpleSelfPreview, fields.avatars.simpleSelfUrl.value.trim(), "linear-gradient(135deg, #ffecd2, #fcb69f)");
+            });
+            fields.avatars.detailTargetUrl.addEventListener("input", function() {
+                applyAvatarPreview(fields.avatars.detailTargetPreview, fields.avatars.detailTargetUrl.value.trim(), "linear-gradient(135deg, #e0c3fc, #8ec5fc)");
+            });
+            fields.avatars.detailSelfUrl.addEventListener("input", function() {
+                applyAvatarPreview(fields.avatars.detailSelfPreview, fields.avatars.detailSelfUrl.value.trim(), "linear-gradient(135deg, #ffecd2, #fcb69f)");
+            });
+            bindFilePicker(fields.avatars.simpleTargetFile, fields.avatars.simpleTargetUrl, fields.avatars.simpleTargetPreview, "linear-gradient(135deg, #e0c3fc, #8ec5fc)");
+            bindFilePicker(fields.avatars.simpleSelfFile, fields.avatars.simpleSelfUrl, fields.avatars.simpleSelfPreview, "linear-gradient(135deg, #ffecd2, #fcb69f)");
+            bindFilePicker(fields.avatars.detailTargetFile, fields.avatars.detailTargetUrl, fields.avatars.detailTargetPreview, "linear-gradient(135deg, #e0c3fc, #8ec5fc)");
+            bindFilePicker(fields.avatars.detailSelfFile, fields.avatars.detailSelfUrl, fields.avatars.detailSelfPreview, "linear-gradient(135deg, #ffecd2, #fcb69f)");
+
+            saveButton.addEventListener("click", function() {
+                var settings = collectSettings();
+                saveSettings(settings);
+                updateChatPreview(settings);
+            });
+        })();
+    </script>
+</body>
+</html>
