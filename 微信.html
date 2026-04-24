@@ -31,12 +31,12 @@
         /* 手机外壳与屏幕包裹 */
         .phone-screen {
             width: 100vw;
-            height: 100vh;
+            height: 100svh;
             height: 100dvh;
             background-color: var(--app-bg);
             background-image: radial-gradient(circle at 0% 0%, #fff 0%, transparent 50%), radial-gradient(circle at 100% 100%, var(--dusty-pink-light) 0%, transparent 60%);
             position: relative;
-            overflow: hidden;
+            overflow: clip;
             border-radius: 0;
             box-shadow: none;
             display: flex; flex-direction: column;
@@ -71,14 +71,14 @@
 
         /* 底部 Dock 导航栏 */
         .bottom-nav {
-            position: absolute;
+            position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: calc(var(--nav-height) + var(--safe-bottom));
+            height: calc(var(--nav-height) + max(var(--safe-bottom), 8px));
             background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border-top: 1px solid var(--border-color); border-radius: 0;
-            display: flex; justify-content: space-around; align-items: flex-start; padding-top: 10px; padding-bottom: max(8px, var(--safe-bottom)); z-index: 100;
+            display: flex; justify-content: space-around; align-items: flex-start; padding-top: 10px; padding-bottom: max(10px, var(--safe-bottom)); z-index: 200;
         }
         .nav-label { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; cursor: pointer; }
         .nav-text { font-size: 10px; color: var(--text-gray); font-weight: 500; transition: color 0.3s; }

@@ -18,6 +18,7 @@
             --bubble-outgoing: #d4a5b4;
             --bubble-incoming-border: rgba(255, 255, 255, 0.5);
             --font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -25,12 +26,12 @@
         
         .phone-screen {
             width: 100vw;
-            height: 100vh;
+            height: 100svh;
             height: 100dvh;
             background-color: var(--app-bg);
             background-image: radial-gradient(circle at 0% 0%, #fff 0%, transparent 50%), radial-gradient(circle at 100% 100%, #f4eaec 0%, transparent 60%);
             position: relative;
-            overflow: hidden;
+            overflow: clip;
             border-radius: 0;
             box-shadow: none;
             display: flex; flex-direction: column;
@@ -125,7 +126,7 @@
         /* === ✅ 优化后的底部输入栏与发送键 === */
         /* ========================================= */
         .chat-footer {
-            padding: 10px 20px 25px; display: flex; align-items: center; gap: 12px;
+            padding: 10px 20px calc(14px + max(10px, var(--safe-bottom))); display: flex; align-items: center; gap: 12px;
             background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border-top: 1px solid var(--border-color); border-radius: 0; position: sticky; bottom: 0;
         }
