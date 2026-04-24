@@ -172,6 +172,10 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    height: 80px;   
+    max-width: 200px;   /* 根据需要调整，例如 260px、300px */
+    /* 其他样式保持不变 */
+
 }
 .music-top { display: flex; gap: 10px;}
 .music-cover {
@@ -200,7 +204,7 @@ body {
     display: flex;
     align-items: center;
     gap: 2px;
-    height: 15px;
+    height: 10px;
     margin-top: auto;
 }
 .wave-bar {
@@ -208,7 +212,116 @@ body {
     background: var(--pink-dark);
     border-radius: 1px;
 }
+/* ========== 模拟音波动画（适配现有音乐组件） ========== */
+/* 调整波形区域高度和对齐方式，为跳动留出空间 */
+.music-wave {
+    display: flex;
+    align-items: flex-end;   /* 改为底部对齐，让波形从底部向上伸展 */
+    gap: 2.5px;
+    height: 32px;           /* 增加高度，使动画变化更明显 */
+    margin-top: 8px;
+    padding: 0 2px;
+}
 
+/* 波形条基础样式：增加过渡与底部变形原点 */
+.wave-bar {
+    width: 3px;
+    background: var(--pink-dark, #dca3ad);
+    border-radius: 2px;
+    height: 12px;           /* 初始高度，动画会通过 scaleY 改变 */
+    transform-origin: bottom;
+    animation: audioWave 0.9s infinite alternate ease-in-out;
+    box-shadow: 0 -1px 1px rgba(220, 163, 173, 0.3);
+}
+
+/* 主音波动画：模拟不规则跳动 */
+@keyframes audioWave {
+    0% {
+        transform: scaleY(0.3);
+        background: #e8b5be;
+    }
+    30% {
+        transform: scaleY(1.0);
+        background: var(--pink-dark, #dca3ad);
+    }
+    55% {
+        transform: scaleY(0.6);
+        background: #d4919c;
+    }
+    80% {
+        transform: scaleY(1.2);
+        background: #cc7f8b;
+    }
+    100% {
+        transform: scaleY(0.4);
+        background: #e0a5b0;
+    }
+}
+
+/* 第二个变体：更强烈的节奏感 */
+@keyframes audioWaveStrong {
+    0% { transform: scaleY(0.2); background: #d4919c; }
+    40% { transform: scaleY(1.3); background: #c57482; }
+    70% { transform: scaleY(0.7); background: #dca3ad; }
+    100% { transform: scaleY(0.5); background: #e8b5be; }
+}
+
+/* 第三个变体：轻快高频跳动 */
+@keyframes audioWaveSharp {
+    0% { transform: scaleY(0.4); background: #e0a5b0; }
+    25% { transform: scaleY(1.2); background: #cc7f8b; }
+    60% { transform: scaleY(0.5); background: #d4919c; }
+    100% { transform: scaleY(0.9); background: #dca3ad; }
+}
+
+/* ===== 为不同的波形条分配独立的动画时长、延迟及变体，营造错落有致的频谱感 ===== */
+/* 假设您的.music-wave内至少有6个.wave-bar，如果数量不足可自行增减 */
+.wave-bar:nth-child(1) {
+    animation: audioWave 0.68s infinite alternate ease-in-out;
+    animation-delay: 0s;
+}
+.wave-bar:nth-child(2) {
+    animation: audioWave 0.92s infinite alternate ease-in-out;
+    animation-delay: 0.07s;
+}
+.wave-bar:nth-child(3) {
+    animation: audioWaveStrong 0.8s infinite alternate ease-in-out;
+    animation-delay: 0.15s;
+}
+.wave-bar:nth-child(4) {
+    animation: audioWaveSharp 0.75s infinite alternate ease-in-out;
+    animation-delay: 0.22s;
+}
+.wave-bar:nth-child(5) {
+    animation: audioWave 0.85s infinite alternate ease-in-out;
+    animation-delay: 0.31s;
+}
+.wave-bar:nth-child(6) {
+    animation: audioWaveStrong 1.05s infinite alternate ease-in-out;
+    animation-delay: 0.4s;
+}
+/* 如果有第7、第8个条形，继续丰富 */
+.wave-bar:nth-child(7) {
+    animation: audioWaveSharp 0.72s infinite alternate ease-in-out;
+    animation-delay: 0.18s;
+}
+.wave-bar:nth-child(8) {
+    animation: audioWave 0.96s infinite alternate ease-in-out;
+    animation-delay: 0.5s;
+}
+
+/* 可选：为波形区域增加柔和光晕 */
+.music-wave {
+    filter: drop-shadow(0 1px 2px rgba(220, 163, 173, 0.2));
+}
+
+/* 尊重用户减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+    .wave-bar {
+        animation: none !important;
+        transform: scaleY(0.65) !important;
+    }
+}
 /* 应用图标样式 */
 .app-item {
     display: flex;

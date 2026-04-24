@@ -1212,6 +1212,13 @@
 
             if (chatInput) {
                 chatInput.addEventListener("input", autoSizeInput);
+                // 回车发送消息（Shift+Enter 换行）
+                chatInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessages();
+    }
+});
                 autoSizeInput();
             }
             if (sendBtn) {
@@ -1259,9 +1266,10 @@
                     }
                 });
             }
-
+            
             initFloatingOrb();
         })();
+        
     </script>
 </body>
 </html>
