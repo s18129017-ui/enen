@@ -8,6 +8,11 @@
     --pink-dark: #dca3ad; /* 深一点的粉色点缀 */
     --gray-light: #e3ddde; /* 浅灰色背景 */
     --gray-dark: #8c8283; /* 深灰色图标 */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --dock-total-height: 110px;
 }
 
 /* 全局重置：让页面铺满视口，无滚动条干扰 */
@@ -25,26 +30,25 @@ html, body {
 }
 
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: block;
     min-height: 100vh;
     background-color: #e0dcdc; /* 外围大背景 */
 }
 
 /* 手机主容器 → 改为全屏容器 */
 .phone {
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100svh;
+    height: 100dvh;
     background-color: var(--bg-color);
     /* 移除圆角，全屏无圆角 */
     border-radius: 0;
     /* 移除阴影，或保留轻微阴影也无妨，但全屏下通常不需要 */
     box-shadow: none;
     position: relative;
-    /* 确保内容过多时可以滚动（原 overflow: hidden 会裁剪内容） */
+    overflow-x: hidden;
     overflow-y: auto;
-    padding: 15px 20px;
+    padding: calc(10px + var(--safe-top)) max(14px, calc(14px + var(--safe-right))) calc(var(--dock-total-height) + max(10px, var(--safe-bottom))) max(14px, calc(14px + var(--safe-left)));
 }
 
 
@@ -70,7 +74,7 @@ body {
     font-size: 14px;
     font-weight: bold;
     color: var(--text-main);
-    margin-bottom: 25px;
+    margin-bottom: 16px;
     margin-top: 5px;
 }
 .status-right {
@@ -82,6 +86,18 @@ body {
     width: 16px;
     height: 16px;
     fill: var(--text-main);
+}
+
+.phone.status-bar-hidden .status-bar {
+    display: none;
+}
+
+.phone.status-bar-hidden {
+    padding-top: calc(20px + var(--safe-top));
+}
+
+.phone.status-bar-hidden .top-widget {
+    margin-top: 12px;
 }
 
 /* 顶部个人卡片组件 */
@@ -339,10 +355,11 @@ body {
     display: flex;
     justify-content: space-between;
     box-shadow: 0 4px 20px rgba(220, 163, 173, 0.15);
-    position: absolute;
-    bottom: 20px;
-    left: 15px;
-    right: 15px;
+    position: fixed;
+    left: max(12px, calc(12px + var(--safe-left)));
+    right: max(12px, calc(12px + var(--safe-right)));
+    bottom: max(10px, var(--safe-bottom));
+    z-index: 20;
 }
 .dock-icon {
     width: 50px;
