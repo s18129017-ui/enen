@@ -1,6 +1,77 @@
 // 动态加载 API Modal HTML 并初始化
 (function() {
+    initStatusBarToggle();
     registerServiceWorker();
+
+    function initStatusBarToggle() {
+        var phone = document.querySelector(".phone");
+        var statusBar = document.querySelector(".status-bar");
+        var STORAGE_KEY = "miffy_status_bar_hidden_v1";
+        var TOP_ZONE = 110;
+        var lastTapAt = 0;
+
+        if (!phone || !statusBar) {
+            return;
+        }
+
+        function setHidden(hidden) {
+            phone.classList.toggle("status-bar-hidden", !!hidden);
+            statusBar.setAttribute("aria-hidden", hidden ? "true" : "false");
+            localStorage.setItem(STORAGE_KEY, hidden ? "1" : "0");
+        }
+
+        function getClientY(event) {
+            if (event && typeof event.clientY === "number") {
+                return event.clientY;
+            }
+            if (event && event.changedTouches && event.changedTouches[0]) {
+                return event.changedTouches[0].clientY;
+            }
+            if (event && event.touches && event.touches[0]) {
+                return event.touches[0].clientY;
+            }
+            return null;
+        }
+
+        function isTopZone(event) {
+            var y = getClientY(event);
+            if (y === null) {
+                return false;
+            }
+            var rect = phone.getBoundingClientRect();
+            return y >= rect.top && y <= rect.top + TOP_ZONE;
+        }
+
+        function toggleByGesture(target, event) {
+            if (!isTopZone(event)) {
+                return;
+            }
+            var hidden = phone.classList.contains("status-bar-hidden");
+            if (hidden) {
+                setHidden(false);
+                return;
+            }
+            if (statusBar.contains(target)) {
+                setHidden(true);
+            }
+        }
+
+        setHidden(localStorage.getItem(STORAGE_KEY) === "1");
+
+        phone.addEventListener("dblclick", function(event) {
+            toggleByGesture(event.target, event);
+        });
+
+        phone.addEventListener("touchend", function(event) {
+            var now = Date.now();
+            if (now - lastTapAt <= 320) {
+                toggleByGesture(event.target, event);
+                lastTapAt = 0;
+                return;
+            }
+            lastTapAt = now;
+        }, { passive: true });
+    }
 
     function registerServiceWorker() {
         if (!("serviceWorker" in navigator)) {
