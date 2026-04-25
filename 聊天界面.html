@@ -120,6 +120,50 @@
         .bubble-mode-light .outgoing .bubble {
             background: linear-gradient(135deg, #e7b8c6, #d4a5b4);
         }
+        /* ========================================= */
+        /* === 🧚‍♀️ ins天使 主题气泡 (Angel Mode) === */
+        /* ========================================= */
+        
+        /* 1. 发送方气泡 (右侧) */
+        .bubble-mode-angel .outgoing .bubble {
+            background: linear-gradient(135deg, #f0d0db, #e0b4c6);
+            color: #55414c; 
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 12px rgba(224, 180, 198, 0.3);
+            z-index: 1; /* 确保层级正常 */
+        }
+        
+        /* 左上角天使装饰 (伪元素占位) */
+        .bubble-mode-angel .outgoing .bubble::before {
+            content: "🕊️✨";
+            position: absolute;
+            top: -12px;
+            left: -16px;
+            font-size: 16px;
+            opacity: 0.85;
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        /* 右侧边缘天使装饰 (伪元素占位) */
+        .bubble-mode-angel .outgoing .bubble::after {
+            content: "✨🕊️"; 
+            position: absolute;
+            top: 8px;
+            right: -24px;
+            font-size: 16px;
+            opacity: 0.85;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* 2. 接收方气泡 (左侧) - 呼应右侧的柔和色调 */
+        .bubble-mode-angel .incoming .bubble {
+            background: #fdfafb;
+            color: #55414c;
+            border: 1px solid rgba(224, 180, 198, 0.3);
+            box-shadow: 0 2px 10px rgba(200, 150, 170, 0.05);
+        }
 
         .bubble-img { padding: 4px; background: var(--bubble-incoming); border-radius: 18px 18px 18px 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .css-photo { width: 160px; height: 200px; border-radius: 14px; background: linear-gradient(135deg, #cfd9df, #e2ebf0); position: relative; overflow: hidden; }
