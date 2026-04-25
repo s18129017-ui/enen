@@ -18,7 +18,9 @@
             --bubble-outgoing: #d4a5b4;
             --bubble-incoming-border: rgba(255, 255, 255, 0.5);
             --font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --chat-footer-space: calc(92px + var(--safe-bottom));
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -35,6 +37,7 @@
             border-radius: 0;
             box-shadow: none;
             display: flex; flex-direction: column;
+            min-height: 0;
         }
 
         /* 顶部状态栏 */
@@ -49,7 +52,7 @@
 
         /* 聊天顶栏 */
         .chat-header {
-            padding: 5px 20px 15px; display: flex; justify-content: space-between; align-items: center;
+            padding: calc(10px + var(--safe-top)) 20px 15px; display: flex; justify-content: space-between; align-items: center;
             background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 50;
         }
@@ -66,7 +69,7 @@
         .i-more { width: 4px; height: 4px; background: var(--text-dark); border-radius: 50%; box-shadow: -7px 0 0 var(--text-dark), 7px 0 0 var(--text-dark); cursor: pointer;}
 
         /* 聊天主体 */
-        .chat-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; }
+        .chat-body { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 20px var(--chat-footer-space); display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; }
         .chat-body::-webkit-scrollbar { display: none; }
         .time-divider { align-self: center; font-size: 11px; color: var(--text-gray); background: rgba(212, 165, 180, 0.15); padding: 4px 12px; border-radius: 12px; margin: 10px 0; }
         .msg-row { display: flex; align-items: flex-end; gap: 10px; max-width: 100%; }
