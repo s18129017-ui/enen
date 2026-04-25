@@ -203,6 +203,25 @@ body {
             line-height: 1.45;
         }
 
+        .range-row {
+            display: grid;
+            grid-template-columns: 1fr 28px 1fr;
+            gap: 8px;
+            align-items: end;
+            margin-top: 10px;
+        }
+        .range-sep {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 12px;
+            padding-bottom: 10px;
+        }
+        .range-tip {
+            color: var(--text-gray);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
         .avatar-pair {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -360,6 +379,23 @@ body {
 
             <div class="mode-content">
                 <div class="mode-panel mode-simple-panel">
+                    <section class="card">
+                        <div class="section-title">聊天条数</div>
+                        <div class="meta-sub">直接填写每轮回复大概几条到几条。</div>
+                        <div class="range-row">
+                            <div class="field">
+                                <label>最少几条</label>
+                                <input id="reply-count-min" type="number" min="1" max="20" inputmode="numeric" value="2" />
+                            </div>
+                            <div class="range-sep">到</div>
+                            <div class="field">
+                                <label>最多几条</label>
+                                <input id="reply-count-max" type="number" min="1" max="20" inputmode="numeric" value="8" />
+                            </div>
+                        </div>
+                        <div class="range-tip">保存后会作为聊天回复条数范围使用，比如 2 到 6 条。</div>
+                    </section>
+
                     <section class="card">
                         <div class="section-title">聊天对象人设（简约）</div>
                         <div class="meta-sub" style="margin-bottom: 8px;">简约模式只填写聊天对象核心人设。</div>
@@ -597,6 +633,7 @@ body {
     <script>
         (function() {
             var STORAGE_KEY = "miffy_chat_settings_v1";
+            var REPLY_COUNT_KEY = "miffy_reply_count_v1";
             var saveButton = document.querySelector(".save-btn");
             var toast = document.getElementById("saveToast");
             var modeSimple = document.getElementById("mode-simple");
@@ -646,6 +683,10 @@ body {
                     detailSelfFile: document.getElementById("detail-self-avatar-file"),
                     detailTargetPreview: document.getElementById("detail-target-avatar-preview"),
                     detailSelfPreview: document.getElementById("detail-self-avatar-preview")
+                },
+                replyCount: {
+                    min: document.getElementById("reply-count-min"),
+                    max: document.getElementById("reply-count-max")
                 }
             };
 
@@ -742,6 +783,37 @@ body {
                 notifySaved();
             }
 
+            function clampReplyCount(value, fallback) {
+                var num = parseInt(value, 10);
+                if (!Number.isFinite(num)) {
+                    return fallback;
+                }
+                return Math.max(1, Math.min(20, num));
+            }
+
+            function loadReplyCountRange() {
+                var fallback = { min: 2, max: 8 };
+                try {
+                    var raw = localStorage.getItem(REPLY_COUNT_KEY);
+                    if (!raw) {
+                        return fallback;
+                    }
+                    var parsed = JSON.parse(raw);
+                    var min = clampReplyCount(parsed.min, fallback.min);
+                    var max = clampReplyCount(parsed.max, fallback.max);
+                    if (max < min) {
+                        max = min;
+                    }
+                    return { min: min, max: max };
+                } catch (error) {
+                    return fallback;
+                }
+            }
+
+            function saveReplyCountRange(range) {
+                localStorage.setItem(REPLY_COUNT_KEY, JSON.stringify(range));
+            }
+
             function notifySaved() {
                 var previousText = saveButton.textContent;
                 saveButton.textContent = "已保存";
@@ -808,6 +880,10 @@ body {
                 if (chatTitle) {
                     chatTitle.textContent = "聊天设置";
                 }
+
+                var replyRange = loadReplyCountRange();
+                fields.replyCount.min.value = replyRange.min;
+                fields.replyCount.max.value = replyRange.max;
             }
 
             function collectSettings() {
@@ -901,7 +977,17 @@ body {
 
             saveButton.addEventListener("click", function() {
                 var settings = collectSettings();
+                var replyMin = clampReplyCount(fields.replyCount.min.value, 2);
+                var replyMax = clampReplyCount(fields.replyCount.max.value, 8);
+                if (replyMax < replyMin) {
+                    replyMax = replyMin;
+                }
+
+                fields.replyCount.min.value = replyMin;
+                fields.replyCount.max.value = replyMax;
+
                 saveSettings(settings);
+                saveReplyCountRange({ min: replyMin, max: replyMax });
                 updateChatPreview(settings);
             });
         })();
