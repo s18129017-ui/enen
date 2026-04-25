@@ -11,6 +11,7 @@
             --glass-bg: rgba(255, 255, 255, 0.75);
             --dusty-pink: #d4a5b4;
             --dusty-pink-dark: #c08d9e;
+            --dusty-pink-soft: #f4eaec;
             --text-dark: #3a3637;
             --text-gray: #a39ea0;
             --border-color: rgba(212, 165, 180, 0.18);
@@ -253,6 +254,18 @@
             border-radius: 50%;
             border: 1px solid rgba(255, 255, 255, 0.45);
         }
+        .floating-orb::after {
+            content: "⚙";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.96);
+            font-size: 19px;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(130, 86, 101, 0.25);
+        }
 
         .floating-orb:active {
             transform: scale(0.95);
@@ -346,6 +359,7 @@
             font-size: 12px;
             color: var(--text-gray);
         }
+        .fab-field input,
         .fab-field select {
             border: 1px solid var(--border-color);
             border-radius: 10px;
@@ -353,6 +367,12 @@
             background: #fff;
             color: var(--text-dark);
             font-size: 13px;
+        }
+        .fab-field input:focus,
+        .fab-field select:focus {
+            outline: none;
+            border-color: rgba(212, 165, 180, 0.6);
+            box-shadow: 0 0 0 3px rgba(212, 165, 180, 0.14);
         }
         .fab-quick {
             display: flex;
@@ -387,6 +407,150 @@
             font-weight: 700;
             padding: 8px 14px;
             cursor: pointer;
+        }
+
+        .bubble.editable-bubble {
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+        .bubble.editable-bubble:active {
+            transform: scale(0.98);
+        }
+
+        .edit-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 22, 23, 0.38);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 220;
+        }
+        .edit-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .edit-panel {
+            width: min(92vw, 430px);
+            border-radius: 24px;
+            background: linear-gradient(155deg, rgba(255,255,255,0.97), rgba(251,243,245,0.98));
+            border: 1px solid rgba(212, 165, 180, 0.32);
+            box-shadow: 0 22px 42px rgba(58, 54, 55, 0.2);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .edit-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+        .edit-desc {
+            font-size: 12px;
+            color: var(--text-gray);
+            line-height: 1.5;
+        }
+        .edit-textarea {
+            width: 100%;
+            min-height: 120px;
+            max-height: 42vh;
+            resize: vertical;
+            border: 1px solid rgba(212, 165, 180, 0.28);
+            border-radius: 16px;
+            padding: 12px 14px;
+            font: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: #fff;
+        }
+        .edit-textarea:focus {
+            outline: none;
+            border-color: rgba(212, 165, 180, 0.6);
+            box-shadow: 0 0 0 3px rgba(212, 165, 180, 0.14);
+        }
+        .edit-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .edit-actions-left,
+        .edit-actions-right {
+            display: flex;
+            gap: 10px;
+        }
+        .edit-btn {
+            border: 1px solid rgba(212, 165, 180, 0.35);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #fff;
+            color: var(--text-dark);
+        }
+        .edit-btn.primary {
+            background: var(--dusty-pink);
+            color: #fff;
+            border-color: transparent;
+        }
+        .edit-btn.soft {
+            background: var(--dusty-pink-soft);
+            color: var(--dusty-pink-dark);
+        }
+        .edit-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .bubble-action-menu {
+            position: fixed;
+            min-width: 132px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(212, 165, 180, 0.24);
+            border-radius: 16px;
+            box-shadow: 0 18px 34px rgba(58, 54, 55, 0.16);
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(4px) scale(0.98);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            z-index: 210;
+        }
+        .bubble-action-menu.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .bubble-action-btn {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: var(--text-dark);
+            font-size: 13px;
+            font-weight: 700;
+            text-align: left;
+            border-radius: 12px;
+            padding: 10px 12px;
+            cursor: pointer;
+        }
+        .bubble-action-btn:hover,
+        .bubble-action-btn:active {
+            background: var(--dusty-pink-soft);
+        }
+        .bubble-action-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
         }
 
     </style>
@@ -466,23 +630,28 @@
             </div>
             <div class="fab-desc">这里先放回复条数设置，后续功能可以继续往这个面板里加。</div>
 
-            <div class="fab-row">
-                <div class="fab-field">
-                    <label for="replyMin">最少回复条数</label>
-                    <select id="replyMin"></select>
-                </div>
-                <div class="fab-field">
-                    <label for="replyMax">最多回复条数</label>
-                    <select id="replyMax"></select>
-                </div>
+            <div class="fab-quick" aria-label="快捷回复条数">
+                <button class="fab-chip" type="button" data-range="1-3">1-3 条</button>
+                <button class="fab-chip" type="button" data-range="2-6">2-6 条</button>
+                <button class="fab-chip" type="button" data-range="4-8">4-8 条</button>
             </div>
 
-            <div class="fab-quick">
-                <button class="fab-chip" type="button" data-range="2-4">2-4 条</button>
-                <button class="fab-chip" type="button" data-range="2-6">2-6 条</button>
-                <button class="fab-chip" type="button" data-range="2-8">2-8 条</button>
-                <button class="fab-chip" type="button" data-range="3-10">3-10 条</button>
-            </div>
+            <div class="fab-row">
+    <div class="fab-field">
+        <label for="replyMin">最少回复条数</label>
+        <select id="replyMin"></select>
+    </div>
+    <div class="fab-field">
+        <label for="replyMax">最多回复条数</label>
+        <select id="replyMax"></select>
+    </div>
+    <div class="fab-field">
+        <label for="retainCount">保留聊天记录条数</label>
+        <input type="number" id="retainCount" placeholder="填写数字，例如 50">
+    </div>
+</div>
+            
+          
 
             <div class="fab-footer">
                 <button class="fab-save" id="fabSave" type="button">保存设置</button>
@@ -490,7 +659,29 @@
         </div>
     </div>
 
+    <div class="edit-modal" id="editModal" aria-hidden="true">
+        <div class="edit-panel" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+            <div class="edit-title" id="editTitle">编辑消息</div>
+            <div class="edit-desc">点击聊天气泡后可修改文字，菜单里的“撤销”可直接删除这条消息。</div>
+            <textarea class="edit-textarea" id="editTextarea" placeholder="输入新的消息内容"></textarea>
+            <div class="edit-actions">
+                <div class="edit-actions-left">
+                    <button class="edit-btn soft" id="editUndoBtn" type="button">还原上一次修改</button>
+                </div>
+                <div class="edit-actions-right">
+                    <button class="edit-btn" id="editCancelBtn" type="button">取消</button>
+                    <button class="edit-btn primary" id="editSaveBtn" type="button">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="chat-toast" id="chatToast"></div>
+
+    <div class="bubble-action-menu" id="bubbleActionMenu" aria-hidden="true">
+        <button class="bubble-action-btn" id="bubbleEditAction" type="button">编辑</button>
+        <button class="bubble-action-btn" id="bubbleUndoAction" type="button">撤销</button>
+    </div>
 
     <script src="prompt-config.js"></script>
     <script>
@@ -502,6 +693,7 @@
             var CHAT_HISTORY_MAX = 30;
             var FAB_POSITION_KEY = "miffy_fab_position_v1";
             var REPLY_COUNT_KEY = "miffy_reply_count_v1";
+            var RETAIN_COUNT_KEY = "miffy_chat_retain_count_v1";
             var titleEl = document.getElementById("chatTitle");
             var subtitleEl = document.getElementById("chatSubtitle");
             var chatBody = document.querySelector(".chat-body");
@@ -520,9 +712,19 @@
             var fabModal = document.getElementById("fabModal");
             var fabClose = document.getElementById("fabClose");
             var fabSave = document.getElementById("fabSave");
+            var editModal = document.getElementById("editModal");
+            var editTextarea = document.getElementById("editTextarea");
+            var editUndoBtn = document.getElementById("editUndoBtn");
+            var editCancelBtn = document.getElementById("editCancelBtn");
+            var editSaveBtn = document.getElementById("editSaveBtn");
+            var bubbleActionMenu = document.getElementById("bubbleActionMenu");
+            var bubbleEditAction = document.getElementById("bubbleEditAction");
+            var bubbleUndoAction = document.getElementById("bubbleUndoAction");
             var replyMinSelect = document.getElementById("replyMin");
             var replyMaxSelect = document.getElementById("replyMax");
+            var retainCountInput = document.getElementById("retainCount");
             var rangeChips = Array.prototype.slice.call(document.querySelectorAll(".fab-chip"));
+            var messageIdSeed = 0;
 
             var chatState = {
                 title: "Winter",
@@ -534,8 +736,22 @@
                 selfAvatarGradient: "linear-gradient(135deg, #ffecd2, #fcb69f)",
                 selfAvatarUrl: "",
                 history: [],
-                pendingUserCount: 0
+                pendingUserCount: 0,
+                editingBubble: null,
+                actionBubble: null
             };
+
+            function isAssistantAvatar(target) {
+                if (!target || !target.closest) {
+                    return false;
+                }
+                var avatar = target.closest(".msg-avatar");
+                if (!avatar || !chatBody || !chatBody.contains(avatar)) {
+                    return false;
+                }
+                var row = avatar.closest(".msg-row");
+                return !!(row && row.classList.contains("incoming") && avatar.offsetParent !== null && !avatar.hasAttribute("data-regenerating"));
+            }
 
             function readJSON(key) {
                 try {
@@ -586,6 +802,24 @@
                 localStorage.setItem(REPLY_COUNT_KEY, JSON.stringify(range));
             }
 
+            function readRetainCount() {
+                var raw = parseInt(localStorage.getItem(RETAIN_COUNT_KEY), 10);
+                if (!Number.isFinite(raw)) {
+                    return CHAT_HISTORY_MAX;
+                }
+                return clamp(raw, 10, 200);
+            }
+
+            function saveRetainCount(value) {
+                var normalized = clamp(parseInt(value, 10) || CHAT_HISTORY_MAX, 10, 200);
+                CHAT_HISTORY_MAX = normalized;
+                localStorage.setItem(RETAIN_COUNT_KEY, String(normalized));
+                if (retainCountInput) {
+                    retainCountInput.value = normalized;
+                }
+                return normalized;
+            }
+
             function refreshRangeChips(min, max) {
                 rangeChips.forEach(function(chip) {
                     var range = chip.getAttribute("data-range") || "";
@@ -617,8 +851,16 @@
                 }
                 var current = readReplyCountRange();
                 applyRangeToControls(current.min, current.max);
+                if (retainCountInput) {
+                    retainCountInput.value = readRetainCount();
+                }
                 fabModal.classList.add("show");
                 fabModal.setAttribute("aria-hidden", "false");
+                window.setTimeout(function() {
+                    if (replyMinSelect) {
+                        replyMinSelect.focus();
+                    }
+                }, 0);
             }
 
             function closeFabModal() {
@@ -627,6 +869,219 @@
                 }
                 fabModal.classList.remove("show");
                 fabModal.setAttribute("aria-hidden", "true");
+            }
+
+            function nextMessageId() {
+                messageIdSeed += 1;
+                return "msg_" + Date.now() + "_" + messageIdSeed;
+            }
+
+            function ensureBubbleMeta(row, bubble, role, text) {
+                if (!row || !bubble) {
+                    return;
+                }
+                if (!row.getAttribute("data-message-id")) {
+                    row.setAttribute("data-message-id", nextMessageId());
+                }
+                bubble.classList.add("editable-bubble");
+                bubble.setAttribute("tabindex", "0");
+                bubble.setAttribute("role", "button");
+                bubble.setAttribute("aria-label", "编辑消息");
+                bubble.setAttribute("data-role", role || "assistant");
+                if (!bubble.getAttribute("data-edit-stack")) {
+                    bubble.setAttribute("data-edit-stack", "[]");
+                }
+                if (typeof text === "string" && !bubble.getAttribute("data-original-text")) {
+                    bubble.setAttribute("data-original-text", text);
+                }
+            }
+
+            function readBubbleStack(bubble) {
+                if (!bubble) {
+                    return [];
+                }
+                try {
+                    var raw = bubble.getAttribute("data-edit-stack") || "[]";
+                    var parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed.filter(function(item) {
+                        return typeof item === "string";
+                    }) : [];
+                } catch (error) {
+                    return [];
+                }
+            }
+
+            function writeBubbleStack(bubble, stack) {
+                if (!bubble) {
+                    return;
+                }
+                bubble.setAttribute("data-edit-stack", JSON.stringify((stack || []).slice(-20)));
+            }
+
+            function syncHistoryFromDom() {
+                chatState.history = trimHistory(collectVisibleHistory());
+                chatState.pendingUserCount = computePendingUserCount(chatState.history);
+                saveHistory();
+            }
+
+            function updateUndoButtonState() {
+                if (!editUndoBtn) {
+                    return;
+                }
+                var bubble = chatState.editingBubble;
+                var stack = readBubbleStack(bubble);
+                editUndoBtn.disabled = !bubble || !stack.length;
+            }
+
+            function updateActionMenuState() {
+                if (!bubbleUndoAction) {
+                    return;
+                }
+                bubbleUndoAction.disabled = !chatState.actionBubble;
+            }
+
+            function closeBubbleActionMenu() {
+                if (!bubbleActionMenu) {
+                    return;
+                }
+                bubbleActionMenu.classList.remove("show");
+                bubbleActionMenu.setAttribute("aria-hidden", "true");
+                chatState.actionBubble = null;
+            }
+
+            function openBubbleActionMenu(bubble) {
+                if (!bubbleActionMenu || !bubble) {
+                    return;
+                }
+
+                chatState.actionBubble = bubble;
+                updateActionMenuState();
+
+                var rect = bubble.getBoundingClientRect();
+                var menuWidth = 132;
+                var menuHeight = 104;
+                var left = rect.left + rect.width / 2 - menuWidth / 2;
+                var top = rect.top - menuHeight - 10;
+
+                left = clamp(left, 10, window.innerWidth - menuWidth - 10);
+                if (top < 10) {
+                    top = Math.min(window.innerHeight - menuHeight - 10, rect.bottom + 10);
+                }
+
+                bubbleActionMenu.style.left = left + "px";
+                bubbleActionMenu.style.top = top + "px";
+                bubbleActionMenu.classList.add("show");
+                bubbleActionMenu.setAttribute("aria-hidden", "false");
+            }
+
+            function openEditModal(bubble) {
+                if (!editModal || !editTextarea || !bubble) {
+                    return;
+                }
+                closeBubbleActionMenu();
+                chatState.editingBubble = bubble;
+                editTextarea.value = bubble.textContent.trim();
+                updateUndoButtonState();
+                editModal.classList.add("show");
+                editModal.setAttribute("aria-hidden", "false");
+                window.setTimeout(function() {
+                    editTextarea.focus();
+                    editTextarea.setSelectionRange(editTextarea.value.length, editTextarea.value.length);
+                }, 0);
+            }
+
+            function closeEditModal() {
+                if (!editModal) {
+                    return;
+                }
+                editModal.classList.remove("show");
+                editModal.setAttribute("aria-hidden", "true");
+                chatState.editingBubble = null;
+            }
+
+            function saveBubbleEdit() {
+                var bubble = chatState.editingBubble;
+                if (!bubble || !editTextarea) {
+                    return;
+                }
+                var nextText = (editTextarea.value || "").trim();
+                var currentText = bubble.textContent.trim();
+
+                if (!nextText) {
+                    showToast("消息内容不能为空");
+                    return;
+                }
+                if (nextText === currentText) {
+                    closeEditModal();
+                    return;
+                }
+
+                var stack = readBubbleStack(bubble);
+                stack.push(currentText);
+                writeBubbleStack(bubble, stack);
+                bubble.textContent = nextText;
+                syncHistoryFromDom();
+                closeEditModal();
+                showToast("消息已更新");
+            }
+
+            function undoBubbleEdit() {
+                var bubble = chatState.editingBubble;
+                if (!bubble || !editTextarea) {
+                    return;
+                }
+                var stack = readBubbleStack(bubble);
+                if (!stack.length) {
+                    showToast("没有可撤销的修改");
+                    return;
+                }
+                var previousText = stack.pop();
+                writeBubbleStack(bubble, stack);
+                bubble.textContent = previousText;
+                editTextarea.value = previousText;
+                syncHistoryFromDom();
+                updateUndoButtonState();
+                showToast("已撤销修改");
+            }
+
+            function deleteBubbleFromMenu() {
+                var bubble = chatState.actionBubble;
+                if (!bubble) {
+                    return;
+                }
+                var row = bubble.closest(".msg-row");
+                if (row && row.parentNode) {
+                    row.parentNode.removeChild(row);
+                }
+                syncHistoryFromDom();
+                closeBubbleActionMenu();
+                showToast("消息已删除");
+            }
+
+            function bindBubbleEditor() {
+                if (!chatBody) {
+                    return;
+                }
+
+                chatBody.addEventListener("click", function(event) {
+                    var bubble = event.target && event.target.closest ? event.target.closest(".bubble") : null;
+                    if (!bubble || !chatBody.contains(bubble)) {
+                        return;
+                    }
+                    event.stopPropagation();
+                    openBubbleActionMenu(bubble);
+                });
+
+                chatBody.addEventListener("keydown", function(event) {
+                    var bubble = event.target && event.target.closest ? event.target.closest(".bubble") : null;
+                    if (!bubble || !chatBody.contains(bubble)) {
+                        return;
+                    }
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openBubbleActionMenu(bubble);
+                    }
+                });
             }
 
             function loadFabPosition() {
@@ -947,6 +1402,9 @@
                     applyAvatarElement(avatarEl, labelEl, chatState.selfAvatarText, chatState.selfAvatarGradient, chatState.selfAvatarUrl);
                 }
 
+                var bubbleEl = row.querySelector(".bubble");
+                ensureBubbleMeta(row, bubbleEl, role, text);
+
                 chatBody.appendChild(row);
                 chatBody.scrollTop = chatBody.scrollHeight;
             }
@@ -977,6 +1435,133 @@
                     var role = row.classList.contains("incoming") ? "assistant" : "user";
                     return { role: role, content: text };
                 }).filter(Boolean);
+            }
+
+            function removeAssistantRoundRows(userRow) {
+                if (!chatBody || !userRow) {
+                    return;
+                }
+
+                var node = userRow.nextElementSibling;
+                while (node) {
+                    var next = node.nextElementSibling;
+                    if (node.classList && node.classList.contains("msg-row")) {
+                        if (node.classList.contains("outgoing")) {
+                            break;
+                        }
+                        if (node.parentNode) {
+                            node.parentNode.removeChild(node);
+                        }
+                    }
+                    node = next;
+                }
+            }
+
+            function findPreviousUserRow(fromRow) {
+                var node = fromRow;
+                while (node) {
+                    if (node.classList && node.classList.contains("msg-row") && node.classList.contains("outgoing")) {
+                        return node;
+                    }
+                    node = node.previousElementSibling;
+                }
+                return null;
+            }
+
+            function requestAssistantReply(historyOverride) {
+                var preset = getActivePreset();
+                if (!preset || !preset.baseUrl || !preset.apiKey || !preset.model) {
+                    showToast("请先在 API 配置里启用可用预设");
+                    return;
+                }
+
+                var baseHistory = Array.isArray(historyOverride) ? historyOverride.slice() : chatState.history.slice();
+                if (!computePendingUserCount(baseHistory)) {
+                    return;
+                }
+
+                setLoading(true);
+                var typingEl = appendTyping();
+                var messageWindow = baseHistory.slice(-24);
+                var payload = [{ role: "system", content: buildSystemPrompt() }].concat(messageWindow);
+
+                callChatApi(preset, payload)
+                    .then(function(data) {
+                        removeTyping(typingEl);
+                        var content = parseAssistantContent(data);
+                        var replies = splitAssistantLines(content);
+
+                        if (!replies.length) {
+                            replies = ["我刚刚有点走神啦，可以再说一次吗？"];
+                        }
+
+                        replies.forEach(function(reply) {
+                            addMessageRow("assistant", reply);
+                            chatState.history.push({ role: "assistant", content: reply });
+                        });
+
+                        chatState.history = trimHistory(chatState.history);
+                        chatState.pendingUserCount = 0;
+                        saveHistory();
+                    })
+                    .catch(function(error) {
+                        removeTyping(typingEl);
+                        showToast("发送失败：" + (error && error.message ? error.message : "未知错误"));
+                    })
+                    .finally(function() {
+                        setLoading(false);
+                    });
+            }
+
+            function regenerateAssistantRoundFromAvatar(avatarEl) {
+                var row = avatarEl && avatarEl.closest ? avatarEl.closest(".msg-row") : null;
+                if (!row || !row.classList.contains("incoming")) {
+                    return;
+                }
+
+                var userRow = findPreviousUserRow(row);
+                if (!userRow) {
+                    showToast("这一轮前没有找到用户提问");
+                    return;
+                }
+
+                var history = collectVisibleHistory();
+                var userBubble = userRow.querySelector(".bubble");
+                var userText = userBubble ? userBubble.textContent.trim() : "";
+                var userIndex = -1;
+
+                for (var i = history.length - 1; i >= 0; i -= 1) {
+                    if (history[i].role === "user" && history[i].content === userText) {
+                        userIndex = i;
+                        break;
+                    }
+                }
+
+                if (userIndex === -1) {
+                    showToast("没有找到可重生的提问");
+                    return;
+                }
+
+                removeAssistantRoundRows(userRow);
+                chatState.history = trimHistory(history.slice(0, userIndex + 1));
+                chatState.pendingUserCount = 1;
+                saveHistory();
+                requestAssistantReply(chatState.history);
+                showToast("已删除本轮回复，重新生成中");
+            }
+
+            function initExistingBubbles() {
+                if (!chatBody) {
+                    return;
+                }
+                Array.prototype.slice.call(chatBody.querySelectorAll(".msg-row")).forEach(function(row) {
+                    var bubble = row.querySelector(".bubble");
+                    if (!bubble) {
+                        return;
+                    }
+                    var role = row.classList.contains("incoming") ? "assistant" : "user";
+                    ensureBubbleMeta(row, bubble, role, bubble.textContent.trim());
+                });
             }
 
             function splitAssistantLines(raw) {
@@ -1168,40 +1753,15 @@
                     return;
                 }
 
-                setLoading(true);
-                var typingEl = appendTyping();
-                var messageWindow = chatState.history.slice(-24);
-                var payload = [{ role: "system", content: buildSystemPrompt() }].concat(messageWindow);
-
-                callChatApi(preset, payload)
-                    .then(function(data) {
-                        removeTyping(typingEl);
-                        var content = parseAssistantContent(data);
-                        var replies = splitAssistantLines(content);
-
-                        if (!replies.length) {
-                            replies = ["我刚刚有点走神啦，可以再说一次吗？"];
-                        }
-
-                        replies.forEach(function(reply) {
-                            addMessageRow("assistant", reply);
-                            chatState.history.push({ role: "assistant", content: reply });
-                        });
-
-                        chatState.history = trimHistory(chatState.history);
-                        chatState.pendingUserCount = 0;
-                        saveHistory();
-                    })
-                    .catch(function(error) {
-                        removeTyping(typingEl);
-                        showToast("发送失败：" + (error && error.message ? error.message : "未知错误"));
-                    })
-                    .finally(function() {
-                        setLoading(false);
-                    });
+                requestAssistantReply(chatState.history);
             }
 
             applyHeaderAndStyle();
+
+            CHAT_HISTORY_MAX = readRetainCount();
+            if (retainCountInput) {
+                retainCountInput.value = CHAT_HISTORY_MAX;
+            }
 
             var restoredHistory = loadHistory();
             if (restoredHistory && restoredHistory.length) {
@@ -1253,14 +1813,37 @@
             if (fabSave) {
                 fabSave.addEventListener("click", function() {
                     var range = normalizeRangeInputs();
+                    var retainCount = saveRetainCount(retainCountInput && retainCountInput.value);
+                    chatState.history = trimHistory(chatState.history);
+                    saveHistory();
+                    renderHistoryFromStorage(chatState.history);
                     saveReplyCountRange(range);
                     closeFabModal();
-                    showToast("回复条数已更新：" + range.min + "-" + range.max + " 条");
+                    showToast("已保存：回复 " + range.min + "-" + range.max + " 条，记录保留 " + retainCount + " 条");
                 });
             }
 
             if (fabClose) {
                 fabClose.addEventListener("click", closeFabModal);
+            }
+            if (editSaveBtn) {
+                editSaveBtn.addEventListener("click", saveBubbleEdit);
+            }
+            if (editCancelBtn) {
+                editCancelBtn.addEventListener("click", closeEditModal);
+            }
+            if (editUndoBtn) {
+                editUndoBtn.addEventListener("click", undoBubbleEdit);
+            }
+            if (bubbleEditAction) {
+                bubbleEditAction.addEventListener("click", function() {
+                    if (chatState.actionBubble) {
+                        openEditModal(chatState.actionBubble);
+                    }
+                });
+            }
+            if (bubbleUndoAction) {
+                bubbleUndoAction.addEventListener("click", deleteBubbleFromMenu);
             }
             if (fabModal) {
                 fabModal.addEventListener("click", function(event) {
@@ -1269,7 +1852,59 @@
                     }
                 });
             }
+            if (editModal) {
+                editModal.addEventListener("click", function(event) {
+                    if (event.target === editModal) {
+                        closeEditModal();
+                    }
+                });
+            }
+            document.addEventListener("click", function(event) {
+                if (isAssistantAvatar(event.target)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    regenerateAssistantRoundFromAvatar(event.target.closest(".msg-avatar"));
+                    return;
+                }
+                if (!bubbleActionMenu || !bubbleActionMenu.classList.contains("show")) {
+                    return;
+                }
+                if (bubbleActionMenu.contains(event.target)) {
+                    return;
+                }
+                var bubble = event.target && event.target.closest ? event.target.closest(".bubble") : null;
+                if (bubble) {
+                    return;
+                }
+                closeBubbleActionMenu();
+            });
+            document.addEventListener("keydown", function(event) {
+                if (event.key === "Escape" && fabModal && fabModal.classList.contains("show")) {
+                    closeFabModal();
+                }
+                if (event.key === "Escape" && editModal && editModal.classList.contains("show")) {
+                    closeEditModal();
+                }
+                if (event.key === "Escape" && bubbleActionMenu && bubbleActionMenu.classList.contains("show")) {
+                    closeBubbleActionMenu();
+                }
+                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && editModal && editModal.classList.contains("show")) {
+                    event.preventDefault();
+                    undoBubbleEdit();
+                }
+            });
+
+            if (editTextarea) {
+                editTextarea.addEventListener("keydown", function(event) {
+                    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                        event.preventDefault();
+                        saveBubbleEdit();
+                    }
+                });
+            }
             
+            initExistingBubbles();
+            bindBubbleEditor();
             initFloatingOrb();
         })();
         
