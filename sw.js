@@ -76,7 +76,15 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
           return response;
         })
-        .catch(() => caches.match("./offline.html"))
+        .catch(() => {
+          if (requestUrl.pathname.endsWith("/offline.html")) {
+            return caches.match("./offline.html");
+          }
+
+          const offlineUrl = new URL("./offline.html", self.location.origin);
+          offlineUrl.searchParams.set("from", requestUrl.href);
+          return Response.redirect(offlineUrl.href, 302);
+        })
     );
     return;
   }
