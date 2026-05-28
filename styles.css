@@ -29,6 +29,29 @@ html, body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+button,
+a,
+[role="button"],
+.app-item,
+.dock-icon {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+button,
+a {
+    transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+button:active,
+a:active,
+[role="button"]:active,
+.app-item:active,
+.dock-icon:active {
+    transform: translateY(1px) scale(0.97);
+}
+
 body {
     display: block;
     min-height: 100vh;
@@ -328,6 +351,8 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 6px;
+    cursor: pointer;
+    transition: transform 0.12s ease, opacity 0.12s ease;
 }
 .app-icon {
     width: 55px;
@@ -337,10 +362,21 @@ body {
     justify-content: center;
     align-items: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 .app-name {
     font-size: 11px;
     color: var(--text-main);
+}
+
+.app-item:active .app-icon,
+.app-item:active .app-name,
+.dock-icon:active {
+    filter: saturate(1.02);
+}
+
+.dock-icon {
+    transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 
 /* 纯CSS/SVG重绘的图标 (粉灰主题) */

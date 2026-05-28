@@ -20,6 +20,36 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        button,
+        a,
+        [role="button"],
+        .save-btn,
+        .danger-btn,
+        .api-close,
+        .api-btn,
+        .preset-main {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        button,
+        a,
+        .preset-main {
+            transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+        }
+        button:active,
+        a:active,
+        [role="button"]:active,
+        .preset-main:active {
+            transform: translateY(1px) scale(0.97);
+        }
+        .save-btn,
+        .danger-btn,
+        .api-close,
+        .api-btn,
+        .preset-main {
+            cursor: pointer;
+        }
        /* 修改 body，让背景与页面主色一致，去掉居中对齐的约束 */
 body {
     background-color: var(--app-bg);  /* 改为与页面背景相同的颜色 */
