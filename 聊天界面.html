@@ -164,6 +164,39 @@
         .bubble-mode-light .outgoing .bubble {
             background: linear-gradient(135deg, #e7b8c6, #d4a5b4);
         }
+
+        .bubble-theme-bw .incoming .bubble {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+        }
+        .bubble-theme-bw .outgoing .bubble {
+            background: #fff;
+            color: #111;
+            border-color: #111;
+        }
+
+        .bubble-theme-pink .incoming .bubble {
+            background: #ffffff;
+            color: #3a3637;
+            border-color: rgba(212, 165, 180, 0.22);
+        }
+        .bubble-theme-pink .outgoing .bubble {
+            background: linear-gradient(135deg, #d7a7b6, #c98fa1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.24);
+        }
+
+        .bubble-theme-wechat .incoming .bubble {
+            background: #ffffff;
+            color: #222;
+            border-color: #d7e5d7;
+        }
+        .bubble-theme-wechat .outgoing .bubble {
+            background: #95ec69;
+            color: #1b3a11;
+            border-color: #80d95f;
+        }
         /* ========================================= */
         /* === 🧚‍♀️ ins天使 主题气泡 (Angel Mode) === */
         /* ========================================= */
@@ -855,6 +888,58 @@
                 return value ? value : fallback;
             }
 
+            function normalizeBubblePreset(value) {
+                var preset = String(value || "").trim();
+                if (preset === "bw" || preset === "pink" || preset === "wechat") {
+                    return preset;
+                }
+                return "pink";
+            }
+
+            function ensureBubbleCustomStyleEl() {
+                var styleEl = document.getElementById("bubbleCustomStyle");
+                if (styleEl) {
+                    return styleEl;
+                }
+
+                styleEl = document.createElement("style");
+                styleEl.id = "bubbleCustomStyle";
+                document.head.appendChild(styleEl);
+                return styleEl;
+            }
+
+            function applyBubbleStyle(settings) {
+                if (!chatBody) {
+                    return;
+                }
+
+                var styleData = settings && settings.bubbleStyle ? settings.bubbleStyle : {};
+                var legacyMode = settings && settings.mode === "detail";
+                var preset = normalizeBubblePreset(styleData.preset);
+                var customCss = typeof styleData.customCss === "string" ? styleData.customCss : "";
+
+                chatBody.classList.remove("bubble-theme-bw", "bubble-theme-pink", "bubble-theme-wechat");
+                chatBody.classList.remove("bubble-mode-soft", "bubble-mode-compact", "bubble-mode-light", "bubble-mode-dark");
+
+                if (legacyMode && settings.detail) {
+                    if (settings.detail.bubbleIncoming === "圆角柔和") {
+                        chatBody.classList.add("bubble-mode-soft");
+                    } else if (settings.detail.bubbleIncoming === "紧凑简洁") {
+                        chatBody.classList.add("bubble-mode-compact");
+                    }
+
+                    if (settings.detail.bubbleOutgoing === "淡粉高亮") {
+                        chatBody.classList.add("bubble-mode-light");
+                    } else if (settings.detail.bubbleOutgoing === "极简深灰") {
+                        chatBody.classList.add("bubble-mode-dark");
+                    }
+                } else {
+                    chatBody.classList.add("bubble-theme-" + preset);
+                }
+
+                ensureBubbleCustomStyleEl().textContent = customCss;
+            }
+
             function clamp(value, min, max) {
                 return Math.max(min, Math.min(max, value));
             }
@@ -1390,9 +1475,7 @@
 
             function applyHeaderAndStyle() {
                 var settings = readJSON(STORAGE_KEY);
-                if (!settings) {
-                    return;
-                }
+                settings = settings || {};
 
                 var mode = settings.mode === "detail" ? "detail" : "simple";
                 var title = mode === "detail"
@@ -1423,21 +1506,7 @@
                 var targetAvatarUrl = activeAvatars.targetUrl || readText(STORAGE_KEY + "_avatar_target", "");
                 var selfAvatarUrl = activeAvatars.selfUrl || readText(STORAGE_KEY + "_avatar_self", "");
 
-                if (chatBody) {
-                    chatBody.classList.remove("bubble-mode-soft", "bubble-mode-compact", "bubble-mode-light", "bubble-mode-dark");
-
-                    if (bubbleIncomingStyle === "圆角柔和") {
-                        chatBody.classList.add("bubble-mode-soft");
-                    } else if (bubbleIncomingStyle === "紧凑简洁") {
-                        chatBody.classList.add("bubble-mode-compact");
-                    }
-
-                    if (bubbleOutgoingStyle === "淡粉高亮") {
-                        chatBody.classList.add("bubble-mode-light");
-                    } else if (bubbleOutgoingStyle === "极简深灰") {
-                        chatBody.classList.add("bubble-mode-dark");
-                    }
-                }
+                applyBubbleStyle(settings);
 
                 if (titleEl && previewTitle) {
                     titleEl.childNodes[0].nodeValue = previewTitle + " ";
@@ -1453,7 +1522,6 @@
                 applyAvatarElement(incomingAvatar2, incomingAvatarLabel2, targetAvatarText, avatarGradient, targetAvatarUrl);
                 applyAvatarElement(selfAvatar1, selfAvatarLabel1, selfAvatarText, selfGradient, selfAvatarUrl);
                 applyAvatarElement(selfAvatar2, selfAvatarLabel2, selfAvatarText, selfGradient, selfAvatarUrl);
-
                 chatState.title = previewTitle || title || "Winter";
                 chatState.avatarText = targetAvatarText;
                 chatState.avatarGradient = avatarGradient;
@@ -1462,6 +1530,14 @@
                 chatState.selfAvatarText = selfAvatarText;
                 chatState.selfAvatarGradient = selfGradient;
                 chatState.selfAvatarUrl = selfAvatarUrl;
+            }
+
+            function refreshChatAppearanceFromStorage(event) {
+                if (event && event.key && event.key !== STORAGE_KEY) {
+                    return;
+                }
+                applyHeaderAndStyle();
+                renderHistoryFromStorage(chatState.history);
             }
 
             function addMessageRow(role, text) {
@@ -1845,6 +1921,8 @@
             }
 
             applyHeaderAndStyle();
+
+            window.addEventListener("storage", refreshChatAppearanceFromStorage);
 
             CHAT_HISTORY_MAX = readRetainCount();
             if (retainCountInput) {

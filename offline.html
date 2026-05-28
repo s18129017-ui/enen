@@ -93,6 +93,27 @@
       var statusEl = document.getElementById("connectionStatus");
       var retryButton = document.getElementById("retryButton");
       var reloading = false;
+      var params = new URLSearchParams(window.location.search);
+      var targetUrl = params.get("from") || "";
+
+      if (!targetUrl && document.referrer) {
+        try {
+          var referrerUrl = new URL(document.referrer);
+          if (referrerUrl.origin === window.location.origin) {
+            targetUrl = referrerUrl.href;
+          }
+        } catch (error) {
+          targetUrl = "";
+        }
+      }
+
+      function getReturnUrl() {
+        if (targetUrl) {
+          return targetUrl;
+        }
+
+        return "./";
+      }
 
       function setStatus(text) {
         if (statusEl) {
@@ -115,10 +136,10 @@
 
         if (retryButton) {
           retryButton.disabled = true;
-          retryButton.textContent = "正在重新加载...";
+          retryButton.textContent = "正在返回...";
         }
 
-        window.location.reload();
+        window.location.replace(getReturnUrl());
       }
 
       function syncNetworkState() {
