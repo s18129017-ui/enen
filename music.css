@@ -1,0 +1,77 @@
+:root {
+  --bg: #f5f2f2;
+  --card: #ffffff;
+  --accent: #dca3a3;
+  --accent-light: #f7e9e9;
+  --text-main: #5a5454;
+  --text-muted: #a39999;
+  --border: #e8e2e2;
+  --radius: 14px;
+  --shadow: 0 4px 20px rgba(180, 160, 160, 0.08);
+}
+
+* { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+body { height: 100vh; margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text-main); overflow: hidden; }
+body.back-feedback { filter: brightness(0.96); }
+
+.app { width: 100%; max-width: 860px; margin: 0 auto; padding: 24px 20px; display: flex; flex-direction: column; height: 100vh; }
+
+/* Header */
+.header { margin-bottom: 20px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-end; }
+.header h1 { font-size: 20px; margin: 0; font-weight: 600; color: var(--accent); }
+
+/* Nav Tabs */
+.nav-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-shrink: 0; }
+.nav-tab { padding: 12px 4px; cursor: pointer; font-size: 15px; color: var(--text-muted); position: relative; }
+.nav-tab.active { color: var(--text-main); font-weight: 600; }
+.nav-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent); }
+
+/* Action Bar */
+.action-bar { display: flex; gap: 14px; margin-bottom: 26px; flex-shrink: 0; align-items: center; }
+.search-wrapper { flex: 1; position: relative; display: flex; align-items: center; }
+.search-wrapper svg { position: absolute; left: 14px; stroke: var(--text-muted); pointer-events: none; }
+.search-wrapper input { width: 100%; padding: 12px 14px 12px 44px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); outline: none; font-size: 15px; min-height:44px; }
+
+select { padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--card); color: var(--text-main); outline: none; cursor: pointer; min-height:44px; }
+
+.btn-action { background: var(--accent); color: white; border: none; padding: 8px 18px; border-radius: var(--radius); cursor: pointer; font-weight: 600; min-height:44px; }
+
+/* Mobile responsive: stack controls and ensure search button visible */
+@media (max-width: 720px) {
+  .app { padding: 16px 12px; }
+  .action-bar { gap:10px; flex-wrap:wrap; align-items:stretch; }
+  #api-source, #page-size-select, label[for], label, .search-wrapper, .btn-action { width: 100%; }
+  .search-wrapper { order: 2; }
+  .btn-action { order: 3; margin-top:6px; }
+  .action-bar select { width: 48%; display:inline-block; }
+  .action-bar label { width: auto; display:inline-flex; align-items:center; }
+  .search-wrapper input { padding: 12px 14px 12px 44px; font-size:15px; }
+  .nav-tabs { gap:12px; }
+}
+
+/* List Area */
+.scroll-area { flex: 1; overflow-y: auto; padding-bottom: 120px; scrollbar-width: none; }
+.scroll-area::-webkit-scrollbar { display: none; }
+.music-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.load-more-indicator {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 10px 0 6px;
+  user-select: none;
+}
+.load-more-indicator.error { color: #c55656; cursor: pointer; }
+
+.item-card { background: var(--card); padding: 10px; border-radius: var(--radius); display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow); cursor: pointer; border: 1px solid transparent; }
+.item-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.item-card.active { background: var(--accent-light); border-color: var(--accent); }
+
+.img-box { width: 44px; height: 44px; background: #eee; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.img-box img { width: 100%; height: 100%; object-fit: cover; }
+.item-info { flex: 1; overflow: hidden; }
+.item-info div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-info .title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.item-info .artist { font-size: 11px; color: var(--text-muted); }
+
+.hidden { display: none; }

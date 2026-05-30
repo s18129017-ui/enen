@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Music - 灵动音律 (GD API版)</title>
+  <link rel="stylesheet" href="music-player.css" />
+  <link rel="stylesheet" href="music.css" />
+</head>
+<body>
+
+  <div class="app">
+    <header class="header">
+      <h1>灵动音律</h1>
+      <span style="font-size: 11px; color: var(--text-muted);">API BY GD-Studio</span>
+    </header>
+
+    <div class="nav-tabs">
+      <div class="nav-tab active" data-view="online">在线搜索</div>
+      <div class="nav-tab" data-view="local">本地音乐</div>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="action-bar" id="search-bar">
+      <select id="api-source">
+        <option value="netease">网易云</option>
+        <option value="kuwo">酷我</option>
+        <option value="joox">JOOX</option>
+      </select>
+      <select id="page-size-select" title="一次加载数量" style="width:140px">
+        <option value="20">一次加载 20 首</option>
+        <option value="50">一次加载 50 首</option>
+        <option value="100">一次加载 100 首</option>
+        <option value="200">一次加载 200 首</option>
+      </select>
+      <div class="search-wrapper">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="keyword" placeholder="搜索歌曲、歌手...">
+      </div>
+      <button class="btn-action" onclick="handleSearch()">搜索</button>
+    </div>
+
+    <!-- 顶部分页按钮已移除，改为底部分页控件 -->
+
+    <div class="scroll-area">
+      <div class="music-grid" id="list-container">
+        <!-- 动态列表 -->
+      </div>
+      <!-- paging footer removed: single-load mode -->
+    </div>
+  </div>
+
+  <!-- 迷你播放条 -->
+  <div class="mini-player" id="mini-player" onclick="toggleFullPlayer(true)">
+    <div style="display:flex; align-items:center; gap:10px; width:70%">
+      <div class="img-box" id="mini-img"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>
+      <div class="item-info">
+        <div class="title" id="mini-title">未在播放</div>
+        <div class="artist" id="mini-artist">GD-Studio Music API</div>
+      </div>
+    </div>
+    <button style="background:none; border:none; color:var(--accent);" onclick="event.stopPropagation(); togglePlay();">
+      <svg id="mini-play-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+    </button>
+  </div>
+
+  <!-- 全屏播放 -->
+  <div class="full-player" id="full-player">
+    <div class="player-bg" id="player-bg"></div>
+    <div class="player-header">
+      <button onclick="toggleFullPlayer(false)" class="ctrl-btn-top">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div class="header-info">
+        <h2 id="full-title">歌曲名</h2>
+        <p id="full-artist">艺术家</p>
+      </div>
+      <button class="ctrl-btn-top">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+      </button>
+    </div>
+
+    <div class="player-body">
+      <div class="player-page player-page-cover active" id="cover-page">
+        <div class="disc-wrapper" id="disc-anim" onclick="toggleDiscLyric()">
+          <div class="disc-inner">
+            <div class="disc-ring" aria-hidden="true"></div>
+            <div class="disc-face disc-face-front">
+              <div class="disc-cover" id="full-img">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1"><path d="M9 18V5l12-2v13"></path></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="player-page player-page-lyric" id="lyric-page">
+        <div class="lyric-page-body" id="lyric-display">点击播放后可查看歌词</div>
+      </div>
+    </div>
+
+    <div class="player-footer">
+      <div class="action-row">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </div>
+
+      <div class="p-ctrls">
+        <div class="prog-bar" onclick="seek(event)">
+          <div class="prog-current" id="prog-curr"></div>
+        </div>
+        <div class="time-info-row">
+          <span id="time-curr">00:00</span>
+          <span id="time-total">00:00</span>
+        </div>
+      </div>
+
+      <div class="btns-row">
+        <button class="btn-side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+        <button class="btn-nav" onclick="playPrev()"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg></button>
+        <button class="circle-btn-main" onclick="togglePlay()">
+          <svg id="full-play-icon-svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+        <button class="btn-nav" onclick="playNext()"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg></button>
+        <button class="btn-side"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="audio"></audio>
+
+  <script src="music.js"></script>
+</body>
+</html>

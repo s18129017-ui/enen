@@ -63,7 +63,7 @@
                 </div>
             </div>
             <!-- 模拟音频波形 -->
-            <div class="music-wave">
+            <div class="music-wave" id="musicWaveBtn" role="button" tabindex="0" aria-label="打开音乐界面">
                 <div class="wave-bar" style="height: 4px;"></div>
                 <div class="wave-bar" style="height: 10px;"></div>
                 <div class="wave-bar" style="height: 14px;"></div>
@@ -157,6 +157,24 @@
 </div>
 
 <script src="script.js"></script>
+<script>
+    (function() {
+        var waveBtn = document.getElementById('musicWaveBtn');
+        if (!waveBtn) return;
+
+        function openMusic() {
+            window.location.href = '音乐.html';
+        }
+
+        waveBtn.addEventListener('click', openMusic);
+        waveBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openMusic();
+            }
+        });
+    })();
+</script>
 
 </body>
 </html>
