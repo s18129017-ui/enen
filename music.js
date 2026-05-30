@@ -441,19 +441,42 @@ function updateLyricHighlight(now) {
   try {
     const overlay = document.getElementById('lyric-display');
     if (!overlay) return;
-    const targetTop = Math.max(0, activeEl.offsetTop - overlay.clientHeight * 0.38);
+    
+    // 用 getBoundingClientRect 计算行在视窗中的位置，而不是 offsetTop
+    const lineBounds = activeEl.getBoundingClientRect();
+    const containerBounds = overlay.getBoundingClientRect();
+    
+    // 行相对于容器顶部的位置
+    const relativeTop = lineBounds.top - containerBounds.top + overlay.scrollTop;
+    const targetTop = Math.max(0, relativeTop - containerBounds.height * 0.38);
+    
+    console.log(`Lyric scroll: idx=${idx}, lineBounds.top=${lineBounds.top}, containerBounds.top=${containerBounds.top}, containerBounds.height=${containerBounds.height}, relativeTop=${relativeTop}, targetTop=${targetTop}`);
     overlay.scrollTop = targetTop;
-  } catch (e) {}
+    console.log(`After scroll: scrollTop is now ${overlay.scrollTop}`);
+  } catch (e) {
+    console.error('Lyric scroll error:', e);
+  }
 }
 
 function toggleDiscLyric() {
-  toggleLyricPage(true);
+  const fullPlayer = document.getElementById('full-player');
+  if (!fullPlayer) return;
+  // 切换显示状态（如果当前显示歌词，则隐藏；如果显示封面，则显示歌词）
+  const isShowingLyric = fullPlayer.classList.contains('show-lyric');
+  toggleLyricPage(!isShowingLyric);
 }
 
 function toggleLyricPage(show) {
   const fullPlayer = document.getElementById('full-player');
   if (!fullPlayer) return;
   fullPlayer.classList.toggle('show-lyric', !!show);
+  // 打开歌词页时重置到顶部
+  if (show) {
+    const overlay = document.getElementById('lyric-display');
+    if (overlay) {
+      overlay.scrollTop = 0;
+    }
+  }
 }
 
 // --- UI 交互控制 ---
@@ -522,9 +545,32 @@ function seek(e) {
 
 function formatTime(s) {
   const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m < 10 ? '0'+m : m}:${sec < 10 ? '0'+sec : sec}`;
+  const secs = String(Math.floor(s % 60)).padStart(2, '0');
+  return `${m}:${secs}`;
 }
+
+// 初始化：为歌词页添加点击返回事件
+(function() {
+  const initLyricPageClick = () => {
+    const lyricPage = document.getElementById('lyric-page');
+    if (!lyricPage) {
+      setTimeout(initLyricPageClick, 100);
+      return;
+    }
+    lyricPage.addEventListener('click', (e) => {
+      e.stopPropagation();  // 防止事件冒泡
+      
+      // 如果点击的是lyric-line（歌词行），则不返回
+      if (e.target.classList && e.target.classList.contains('lyric-line')) {
+        return;
+      }
+      
+      // 其他所有点击都触发返回
+      toggleDiscLyric();
+    });
+  };
+  initLyricPageClick();
+})();
 
 // 左上角返回热区（无需按钮）
 function goBackFromTopLeft() {
