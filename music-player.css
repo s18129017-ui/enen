@@ -109,13 +109,17 @@
 .disc-ring{
   position:absolute; inset:0; border-radius:50%; z-index:1;
   background: repeating-radial-gradient(circle, #222 0, #111 2px, #222 4px);
+  animation-play-state: paused;
 }
-.disc-wrapper.playing .disc-ring{ animation: rotateDisc 20s linear infinite; }
+.disc-wrapper.playing .disc-ring{ 
+  animation: rotateDisc 20s linear infinite; 
+  animation-play-state: running;
+}
 
 .disc-inner{ width:100%; height:100%; border-radius:50%; display:flex; align-items:center; justify-content:center; }
 
 .disc-inner{ position:relative; transform-style:preserve-3d; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
-.disc-wrapper.show-lyric .disc-inner{ transform: rotateY(180deg); }
+.full-player.show-lyric #disc-anim .disc-inner{ transform: rotateY(180deg); }
 
 .disc-face{
   position:absolute;
@@ -126,12 +130,20 @@
   backface-visibility:hidden;
   border-radius:50%;
   z-index:2;
+  animation-play-state: paused;
+}
+.disc-wrapper.playing .disc-face {
+  animation: rotateDisc 20s linear infinite;
+  animation-play-state: running;
 }
 
 .disc-cover{ width:65%; height:65%; border-radius:50%; overflow:hidden; border:4px solid #000; background:#222; display:flex; align-items:center; justify-content:center; }
 .disc-cover img{ width:100%; height:100%; object-fit:cover; }
 
-@keyframes rotateDisc{ from{ transform: rotate(0deg); } to{ transform: rotate(360deg); } }
+@keyframes rotateDisc { 
+  from { transform: rotate(0deg); } 
+  to { transform: rotate(360deg); } 
+}
 
 .player-footer{ padding:0 30px 50px; display:flex; flex-direction:column; align-items:center; }
 .action-row{ display:flex; justify-content:space-between; width:100%; max-width:300px; margin-bottom:25px; opacity:0.8; }
