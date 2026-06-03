@@ -307,15 +307,15 @@
                 </div>
                 <div id="dynamicContacts"></div>
                 <div class="index-letter">A</div>
-                <a class="entry-link" href="聊天界面.html"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Aki</span></div></a>
+                <div class="entry-link"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Aki</span></div></div>
                 <div class="divider" style="margin-left:75px"></div>
-                <a class="entry-link" href="聊天界面.html"><div class="c-item"><div class="avatar av-5"></div><span class="c-name-text">Alice</span></div></a>
+                <div class="entry-link"><div class="c-item"><div class="avatar av-5"></div><span class="c-name-text">Alice</span></div></div>
                 <div class="index-letter">I</div>
-                <a class="entry-link" href="聊天界面.html"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Isla</span></div></a>
+                <div class="entry-link"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Isla</span></div></div>
                 <div class="index-letter">N</div>
-                <a class="entry-link" href="聊天界面.html"><div class="c-item"><div class="avatar av-2"></div><span class="c-name-text">Nako</span></div></a>
+                <div class="entry-link"><div class="c-item"><div class="avatar av-2"></div><span class="c-name-text">Nako</span></div></div>
                 <div class="index-letter">W</div>
-                <a class="entry-link" href="聊天界面.html"><div class="c-item"><div class="avatar av-1"></div><span class="c-name-text">Winter</span></div></a>
+                <div class="entry-link"><div class="c-item"><div class="avatar av-1"></div><span class="c-name-text">Winter</span></div></div>
             </div>
             <div id="page-3" class="page">
                 <header class="app-header" style="position:absolute; width:100%; background:transparent;">
@@ -482,6 +482,39 @@
             function readChats(){ try{ return JSON.parse(localStorage.getItem('miffy_chats_v1')||'[]'); }catch(e){ return []; } }
             function writeChats(list){ try{ localStorage.setItem('miffy_chats_v1', JSON.stringify(list||[])); }catch(e){}
             }
+            function extractAvatarText(name){
+                var text = String(name || '').trim();
+                return text ? text.charAt(0).toUpperCase() : 'W';
+            }
+            function buildAvatarGradient(seedText){
+                var seed = (seedText || 'W').charCodeAt(0) || 87;
+                var hueA = seed % 360;
+                var hueB = (seed * 2 + 47) % 360;
+                return 'linear-gradient(135deg, hsl(' + hueA + ', 78%, 82%), hsl(' + hueB + ', 72%, 68%))';
+            }
+            function applyAvatarFallback(el, name, avatarUrl){
+                if(!el) return;
+                var avatarText = extractAvatarText(name);
+                if(avatarUrl){
+                    el.style.background = '';
+                    el.style.backgroundImage = 'url("' + avatarUrl.replace(/"/g, '\\"') + '")';
+                    el.style.backgroundSize = 'cover';
+                    el.style.backgroundPosition = 'center';
+                    el.style.color = 'transparent';
+                    el.textContent = '';
+                    return;
+                }
+                el.style.backgroundImage = 'none';
+                el.style.background = buildAvatarGradient(avatarText);
+                el.style.backgroundSize = '';
+                el.style.backgroundPosition = '';
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'center';
+                el.style.color = '#ffffff';
+                el.style.fontWeight = '700';
+                el.textContent = avatarText;
+            }
             function renderContacts(){
                 var dyn = document.getElementById('dynamicContacts');
                 if(!dyn) return;
@@ -490,10 +523,11 @@
                 // newest first
                 for(var i=list.length-1;i>=0;i--){
                     var c = list[i];
-                    var a = document.createElement('a'); a.className='entry-link'; a.href='聊天界面.html';
+                    var displayName = c.name || c.callName || 'Unnamed';
+                    var a = document.createElement('div'); a.className='entry-link';
                     var row = document.createElement('div'); row.className='c-item';
-                    var av = document.createElement('div'); av.className='avatar'; av.style.width='40px'; av.style.height='40px'; if(c.avatar) av.style.backgroundImage='url("'+c.avatar.replace(/"/g,'\"')+'")';
-                    var span = document.createElement('span'); span.className='c-name-text'; span.textContent = c.name || c.callName || 'Unnamed';
+                    var av = document.createElement('div'); av.className='avatar'; av.style.width='40px'; av.style.height='40px'; applyAvatarFallback(av, displayName, c.avatar);
+                    var span = document.createElement('span'); span.className='c-name-text'; span.textContent = displayName;
                     row.appendChild(av); row.appendChild(span); a.appendChild(row); dyn.appendChild(a);
                 }
             }
@@ -507,6 +541,7 @@
 
                 for(var j=0;j<chats.length;j++){
                     var item = chats[j];
+                    var displayName = item.name || item.callName || 'Unnamed';
                     var link = document.createElement('a');
                     link.className = 'entry-link';
                     link.href = '聊天界面.html';
@@ -521,7 +556,7 @@
                     av.className = 'avatar';
                     av.style.width = '50px';
                     av.style.height = '50px';
-                    if(item.avatar){ av.style.backgroundImage = 'url("' + item.avatar.replace(/"/g, '\\"') + '")'; av.style.backgroundSize = 'cover'; }
+                    applyAvatarFallback(av, displayName, item.avatar);
                     avatarBox.appendChild(av);
 
                     var content = document.createElement('div');
@@ -531,7 +566,7 @@
                     row1.className = 'c-row';
                     var name = document.createElement('span');
                     name.className = 'c-name';
-                    name.textContent = item.name || item.callName || 'Unnamed';
+                    name.textContent = displayName;
                     var time = document.createElement('span');
                     time.className = 'c-time';
                     time.textContent = item.time || 'Now';
