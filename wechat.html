@@ -75,8 +75,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 96px;
-            height: 96px;
+            width: 32px;
+            height: 32px;
             z-index: 160;
             text-decoration: none;
             background: transparent;
@@ -198,12 +198,7 @@
         .i-heart.active::before, .i-heart.active::after { background: var(--dusty-pink); }
         .i-chat { width: 16px; height: 12px; border: 1.5px solid var(--text-gray); border-radius: 4px; position: relative; margin-top: 2px;}
         .i-chat::after { content:''; position:absolute; bottom:-4px; left: 3px; border-width: 3px; border-style: solid; border-color: var(--text-gray) transparent transparent transparent; transform: rotate(20deg); }
-        #page-4 { padding-top: 20px; }
-        .me-header { display: flex; align-items: center; padding: 20px; margin: 0 max(16px, calc(16px + var(--safe-right))) 20px max(16px, calc(16px + var(--safe-left))); background: var(--card-bg); border-radius: 20px; box-shadow: 0 4px 15px rgba(212,165,180,0.05); }
-        .me-header .avatar { width: 65px; height: 65px; border-radius: 18px; margin-right: 16px; }
-        .me-info { flex: 1; }
-        .me-name { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
-        .me-id { font-size: 12px; color: var(--text-gray); }
+        /* Me page styles imported from nav-me.css */
         .i-qr { width: 16px; height: 16px; border: 1px solid var(--text-gray); display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding: 2px; border-radius: 3px; opacity: 0.6;}
         .i-qr span { background: var(--text-gray); border-radius: 1px;}
         .i-qr span:nth-child(4) { background: transparent; }
@@ -310,6 +305,7 @@
                     <div class="c-item"><div class="avatar"><div class="icon-new-friend"></div></div><span class="c-name-text">New Friends</span></div>
                     <div class="c-item"><div class="avatar"><div class="icon-group"></div></div><span class="c-name-text">Group Chats</span></div>
                 </div>
+                <div id="dynamicContacts"></div>
                 <div class="index-letter">A</div>
                 <a class="entry-link" href="聊天界面.html"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Aki</span></div></a>
                 <div class="divider" style="margin-left:75px"></div>
@@ -372,33 +368,31 @@
                         <div class="me-name">Miffy</div>
                         <div class="me-id">ID: miffy_yoo</div>
                     </div>
-                    <div class="i-qr"><span></span><span></span><span></span><span></span></div>
-                    <div class="i-arrow" style="margin-left: 15px;"></div>
                 </div>
                 <div class="setting-group">
                     <div class="s-item">
                         <div class="s-icon-box bg-pink"><div class="i-wallet"></div></div>
-                        <span class="s-text">Services</span><div class="i-arrow"></div>
+                        <span class="s-text">服务</span><div class="i-arrow"></div>
                     </div>
                 </div>
                 <div class="setting-group">
                     <div class="s-item">
                         <div class="s-icon-box bg-blue"><div class="i-fav"></div></div>
-                        <span class="s-text">Favorites</span><div class="i-arrow"></div>
+                        <span class="s-text">收藏</span><div class="i-arrow"></div>
                     </div>
                     <div class="s-item">
                         <div class="s-icon-box bg-blue"><div class="i-album"></div></div>
-                        <span class="s-text">Moments</span><div class="i-arrow"></div>
+                        <span class="s-text">面具</span><div class="i-arrow"></div>
                     </div>
                     <div class="s-item">
                         <div class="s-icon-box bg-yellow"><div class="i-card"></div></div>
-                        <span class="s-text">Cards & Offers</span><div class="i-arrow"></div>
+                        <span class="s-text">银行卡</span><div class="i-arrow"></div>
                     </div>
                 </div>
                 <div class="setting-group">
                     <div class="s-item">
                         <div class="s-icon-box bg-gray"><div class="i-gear"></div></div>
-                        <span class="s-text">Settings</span><div class="i-arrow"></div>
+                        <span class="s-text">设置</span><div class="i-arrow"></div>
                     </div>
                 </div>
             </div>
@@ -418,5 +412,185 @@
             </label>
         </nav>
     </div>
+    <!-- Add Contact Modal -->
+    <div id="addContactModal" class="modal" aria-hidden="true" style="display:none;">
+        <div class="modal-sheet">
+            <div class="modal-title">添加</div>
+            <div style="padding:12px 16px; display:flex; flex-direction:column; gap:8px;">
+                <button id="btnSelfBuild" class="modal-btn">自建联系人</button>
+                <button id="btnImportCard" class="modal-btn">导入角色卡</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Self build contact modal -->
+    <div id="selfBuildModal" class="modal" aria-hidden="true" style="display:none;">
+        <div class="modal-sheet">
+    
+            <div class="modal-title">新建联系人</div>
+            <div style="padding:12px 16px; display:flex; flex-direction:column; gap:8px;">
+                <input id="contactName" placeholder="昵称" style="padding:10px;border-radius:10px;border:1px solid var(--border-color);">
+                <input id="contactCallName" placeholder="称呼" style="padding:10px;border-radius:10px;border:1px solid var(--border-color);">
+                <input id="contactAvatarUrl" placeholder="头像 URL (可选)" style="padding:10px;border-radius:10px;border:1px solid var(--border-color);">
+            </div>
+            <div style="display:flex; gap:10px; padding:12px 16px; justify-content:flex-end;">
+                <button id="selfBuildCancel" class="modal-action">取消</button>
+                <button id="selfBuildSave" class="modal-action primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="nav-me.css">
+    <style>
+        .modal { position: fixed; left: 0; top: 0; right:0; bottom:0; background: rgba(0,0,0,0.25); display:flex; align-items:flex-end; justify-content:center; z-index:300; }
+        .modal-sheet { width: 100%; max-width: 520px; background: #fff; border-radius: 14px 14px 0 0; box-shadow: 0 -6px 30px rgba(0,0,0,0.12); padding-bottom:12px; }
+        .modal.show { display:flex !important; }
+        .modal-close { position:absolute; right:12px; top:8px; border:none; background:transparent; font-size:20px; }
+        .modal-title { font-size:16px; font-weight:700; padding:14px 16px 6px 16px; }
+        .modal-btn { width:100%; padding:12px; border-radius:10px; border:1px solid var(--border-color); background:var(--card-bg); font-weight:600; }
+        .modal-action { padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:transparent; }
+        .modal-action.primary { background: var(--dusty-pink); color:#fff; border: none; }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            var plus = document.querySelector('.i-plus');
+            var addModal = document.getElementById('addContactModal');
+            var btnSelf = document.getElementById('btnSelfBuild');
+            var btnImport = document.getElementById('btnImportCard');
+            var selfModal = document.getElementById('selfBuildModal');
+            var selfClose = document.getElementById('selfBuildClose');
+            var selfCancel = document.getElementById('selfBuildCancel');
+            var selfSave = document.getElementById('selfBuildSave');
+
+            function openModal(m){ if(!m) return; m.style.display='flex'; m.classList.add('show'); m.setAttribute('aria-hidden','false'); }
+            function closeModal(m){ if(!m) return; m.style.display='none'; m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
+
+            if(plus) plus.addEventListener('click', function(e){ e.preventDefault(); openModal(addModal); });
+            if(addModal) addModal.addEventListener('click', function(e){ if(e.target === addModal) closeModal(addModal); });
+
+            if(btnSelf) btnSelf.addEventListener('click', function(){ closeModal(addModal); openModal(selfModal); });
+            if(btnImport) btnImport.addEventListener('click', function(){ closeModal(addModal); alert('导入角色卡功能尚未实现'); });
+
+            if(selfClose) selfClose.addEventListener('click', function(){ closeModal(selfModal); });
+            if(selfCancel) selfCancel.addEventListener('click', function(){ closeModal(selfModal); });
+            if(selfModal) selfModal.addEventListener('click', function(e){ if(e.target === selfModal) closeModal(selfModal); });
+
+            function readContacts(){ try{ return JSON.parse(localStorage.getItem('miffy_contacts_v1')||'[]'); }catch(e){ return []; } }
+            function writeContacts(list){ try{ localStorage.setItem('miffy_contacts_v1', JSON.stringify(list||[])); }catch(e){}
+            }
+            function readChats(){ try{ return JSON.parse(localStorage.getItem('miffy_chats_v1')||'[]'); }catch(e){ return []; } }
+            function writeChats(list){ try{ localStorage.setItem('miffy_chats_v1', JSON.stringify(list||[])); }catch(e){}
+            }
+            function renderContacts(){
+                var dyn = document.getElementById('dynamicContacts');
+                if(!dyn) return;
+                var list = readContacts();
+                dyn.innerHTML = '';
+                // newest first
+                for(var i=list.length-1;i>=0;i--){
+                    var c = list[i];
+                    var a = document.createElement('a'); a.className='entry-link'; a.href='聊天界面.html';
+                    var row = document.createElement('div'); row.className='c-item';
+                    var av = document.createElement('div'); av.className='avatar'; av.style.width='40px'; av.style.height='40px'; if(c.avatar) av.style.backgroundImage='url("'+c.avatar.replace(/"/g,'\"')+'")';
+                    var span = document.createElement('span'); span.className='c-name-text'; span.textContent = c.name || c.callName || 'Unnamed';
+                    row.appendChild(av); row.appendChild(span); a.appendChild(row); dyn.appendChild(a);
+                }
+            }
+            function renderSavedChats(){
+                var page1 = document.getElementById('page-1');
+                if(!page1) return;
+                var chats = readChats();
+                // remove previously injected chats only
+                var injected = page1.querySelectorAll('[data-injected-chat="1"]');
+                for(var i=0;i<injected.length;i++) injected[i].remove();
+
+                for(var j=0;j<chats.length;j++){
+                    var item = chats[j];
+                    var link = document.createElement('a');
+                    link.className = 'entry-link';
+                    link.href = '聊天界面.html';
+                    link.setAttribute('data-injected-chat', '1');
+
+                    var chat = document.createElement('div');
+                    chat.className = 'chat-item';
+
+                    var avatarBox = document.createElement('div');
+                    avatarBox.className = 'chat-avatar-box';
+                    var av = document.createElement('div');
+                    av.className = 'avatar';
+                    av.style.width = '50px';
+                    av.style.height = '50px';
+                    if(item.avatar){ av.style.backgroundImage = 'url("' + item.avatar.replace(/"/g, '\\"') + '")'; av.style.backgroundSize = 'cover'; }
+                    avatarBox.appendChild(av);
+
+                    var content = document.createElement('div');
+                    content.className = 'chat-content';
+
+                    var row1 = document.createElement('div');
+                    row1.className = 'c-row';
+                    var name = document.createElement('span');
+                    name.className = 'c-name';
+                    name.textContent = item.name || item.callName || 'Unnamed';
+                    var time = document.createElement('span');
+                    time.className = 'c-time';
+                    time.textContent = item.time || 'Now';
+                    row1.appendChild(name);
+                    row1.appendChild(time);
+
+                    var row2 = document.createElement('div');
+                    row2.className = 'c-row';
+                    var msg = document.createElement('span');
+                    msg.className = 'c-msg';
+                    msg.textContent = item.lastMessage || '新联系人';
+                    row2.appendChild(msg);
+
+                    content.appendChild(row1);
+                    content.appendChild(row2);
+                    chat.appendChild(avatarBox);
+                    chat.appendChild(content);
+                    link.appendChild(chat);
+
+                    var firstChat = page1.querySelector('.chat-item');
+                    if(firstChat){
+                        page1.insertBefore(link, firstChat.parentNode && firstChat.parentNode.classList && firstChat.parentNode.classList.contains('entry-link') ? firstChat.parentNode : firstChat);
+                    }else{
+                        page1.appendChild(link);
+                    }
+                }
+            }
+
+            // wire save to add a contact (basic persistence)
+            if(selfSave){
+                selfSave.addEventListener('click', function(){
+                    var name = (document.getElementById('contactName') && document.getElementById('contactName').value || '').trim();
+                    if(!name){ alert('请填写昵称'); return; }
+                    var callName = (document.getElementById('contactCallName') && document.getElementById('contactCallName').value || '').trim();
+                    var avatar = (document.getElementById('contactAvatarUrl') && document.getElementById('contactAvatarUrl').value || '').trim();
+                    var contacts = readContacts();
+                    contacts.push({ name: name, callName: callName, avatar: avatar });
+                    writeContacts(contacts);
+
+                    var chats = readChats();
+                    var now = new Date();
+                    var hh = String(now.getHours()).padStart(2, '0');
+                    var mm = String(now.getMinutes()).padStart(2, '0');
+                    chats.unshift({ name: name, callName: callName, avatar: avatar, lastMessage: '新联系人', time: hh + ':' + mm });
+                    writeChats(chats);
+
+                    renderContacts();
+                    renderSavedChats();
+                    closeModal(selfModal);
+                    document.getElementById('contactName').value=''; document.getElementById('contactCallName').value=''; document.getElementById('contactAvatarUrl').value='';
+                });
+            }
+
+            // Me page logic imported from nav-me.js
+            // initial render
+            renderContacts();
+            renderSavedChats();
+        });
+    </script>
+    <script src="nav-me.js"></script>
 </body>
 </html>
