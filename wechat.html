@@ -454,6 +454,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function(){
+            var CONTACTS_KEY = 'miffy_contacts_v1';
+            var CHATS_KEY = 'miffy_chats_v1';
+            var CHAT_HISTORY_KEY = 'miffy_chat_history_v1';
             var plus = document.querySelector('.i-plus');
             var addModal = document.getElementById('addContactModal');
             var btnSelf = document.getElementById('btnSelfBuild');
@@ -476,11 +479,39 @@
             if(selfCancel) selfCancel.addEventListener('click', function(){ closeModal(selfModal); });
             if(selfModal) selfModal.addEventListener('click', function(e){ if(e.target === selfModal) closeModal(selfModal); });
 
-            function readContacts(){ try{ return JSON.parse(localStorage.getItem('miffy_contacts_v1')||'[]'); }catch(e){ return []; } }
-            function writeContacts(list){ try{ localStorage.setItem('miffy_contacts_v1', JSON.stringify(list||[])); }catch(e){}
+            function readContacts(){ try{ return JSON.parse(localStorage.getItem(CONTACTS_KEY)||'[]'); }catch(e){ return []; } }
+            function writeContacts(list){ try{ localStorage.setItem(CONTACTS_KEY, JSON.stringify(list||[])); }catch(e){}
             }
-            function readChats(){ try{ return JSON.parse(localStorage.getItem('miffy_chats_v1')||'[]'); }catch(e){ return []; } }
-            function writeChats(list){ try{ localStorage.setItem('miffy_chats_v1', JSON.stringify(list||[])); }catch(e){}
+            function readChats(){ try{ return JSON.parse(localStorage.getItem(CHATS_KEY)||'[]'); }catch(e){ return []; } }
+            function writeChats(list){ try{ localStorage.setItem(CHATS_KEY, JSON.stringify(list||[])); }catch(e){}
+            }
+            function readChatHistories(){
+                try{
+                    var raw = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '{}');
+                    if(raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;
+                    return {};
+                }catch(e){ return {}; }
+            }
+            function writeChatHistories(map){
+                try{ localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(map || {})); }catch(e){}
+            }
+            function createId(prefix){
+                return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            }
+            function formatCurrentTime(){
+                var now = new Date();
+                var hh = String(now.getHours()).padStart(2, '0');
+                var mm = String(now.getMinutes()).padStart(2, '0');
+                return hh + ':' + mm;
+            }
+            function buildChatDetailHref(chat){
+                var params = new URLSearchParams();
+                if(chat && chat.id) params.set('chatId', chat.id);
+                if(chat && chat.contactId) params.set('contactId', chat.contactId);
+                if(chat && chat.name) params.set('name', chat.name);
+                if(chat && chat.callName) params.set('callName', chat.callName);
+                if(chat && chat.avatar) params.set('avatar', chat.avatar);
+                return '聊天界面.html?' + params.toString();
             }
             function extractAvatarText(name){
                 var text = String(name || '').trim();
@@ -524,7 +555,8 @@
                 for(var i=list.length-1;i>=0;i--){
                     var c = list[i];
                     var displayName = c.name || c.callName || 'Unnamed';
-                    var a = document.createElement('div'); a.className='entry-link';
+                    var a = document.createElement('a'); a.className='entry-link';
+                    a.href = buildChatDetailHref({ id: c.chatId, contactId: c.id, name: c.name, callName: c.callName, avatar: c.avatar });
                     var row = document.createElement('div'); row.className='c-item';
                     var av = document.createElement('div'); av.className='avatar'; av.style.width='40px'; av.style.height='40px'; applyAvatarFallback(av, displayName, c.avatar);
                     var span = document.createElement('span'); span.className='c-name-text'; span.textContent = displayName;
@@ -544,7 +576,7 @@
                     var displayName = item.name || item.callName || 'Unnamed';
                     var link = document.createElement('a');
                     link.className = 'entry-link';
-                    link.href = '聊天界面.html';
+                    link.href = buildChatDetailHref(item);
                     link.setAttribute('data-injected-chat', '1');
 
                     var chat = document.createElement('div');
@@ -602,16 +634,19 @@
                     if(!name){ alert('请填写昵称'); return; }
                     var callName = (document.getElementById('contactCallName') && document.getElementById('contactCallName').value || '').trim();
                     var avatar = (document.getElementById('contactAvatarUrl') && document.getElementById('contactAvatarUrl').value || '').trim();
+                    var contactId = createId('c');
+                    var chatId = createId('chat');
                     var contacts = readContacts();
-                    contacts.push({ name: name, callName: callName, avatar: avatar });
+                    contacts.push({ id: contactId, chatId: chatId, name: name, callName: callName, avatar: avatar });
                     writeContacts(contacts);
 
                     var chats = readChats();
-                    var now = new Date();
-                    var hh = String(now.getHours()).padStart(2, '0');
-                    var mm = String(now.getMinutes()).padStart(2, '0');
-                    chats.unshift({ name: name, callName: callName, avatar: avatar, lastMessage: '新联系人', time: hh + ':' + mm });
+                    chats.unshift({ id: chatId, contactId: contactId, name: name, callName: callName, avatar: avatar, lastMessage: '新联系人', time: formatCurrentTime() });
                     writeChats(chats);
+
+                    var histories = readChatHistories();
+                    if(!Array.isArray(histories[chatId])) histories[chatId] = [];
+                    writeChatHistories(histories);
 
                     renderContacts();
                     renderSavedChats();

@@ -811,6 +811,8 @@
             var PRESET_KEY = "api_presets";
             var ACTIVE_PRESET_KEY = "api_active_preset";
             var CHAT_HISTORY_KEY = "miffy_chat_history_v1";
+            var CHATS_KEY = "miffy_chats_v1";
+            var CONTACTS_KEY = "miffy_contacts_v1";
             var CHAT_HISTORY_MAX = 30;
             var FAB_POSITION_KEY = "miffy_fab_position_v1";
             var REPLY_COUNT_KEY = "miffy_reply_count_v1";
@@ -848,6 +850,8 @@
             var messageIdSeed = 0;
 
             var chatState = {
+                chatId: "default",
+                contactId: "",
                 title: "Winter",
                 avatarText: "W",
                 avatarGradient: "linear-gradient(135deg, #e0c3fc, #8ec5fc)",
@@ -861,6 +865,108 @@
                 editingBubble: null,
                 actionBubble: null
             };
+
+            function parseChatRoute() {
+                var params = new URLSearchParams(window.location.search || "");
+                return {
+                    chatId: params.get("chatId") || "default",
+                    contactId: params.get("contactId") || "",
+                    name: params.get("name") || "",
+                    callName: params.get("callName") || "",
+                    avatar: params.get("avatar") || ""
+                };
+            }
+
+            function readChats() {
+                var list = readJSON(CHATS_KEY);
+                return Array.isArray(list) ? list : [];
+            }
+
+            function readContacts() {
+                var list = readJSON(CONTACTS_KEY);
+                return Array.isArray(list) ? list : [];
+            }
+
+            function findChatMeta(route) {
+                var chats = readChats();
+                var contacts = readContacts();
+                var chat = null;
+                var contact = null;
+                var i;
+
+                for (i = 0; i < chats.length; i += 1) {
+                    if (chats[i] && chats[i].id === route.chatId) {
+                        chat = chats[i];
+                        break;
+                    }
+                }
+
+                for (i = 0; i < contacts.length; i += 1) {
+                    if (!contacts[i]) {
+                        continue;
+                    }
+                    if ((route.contactId && contacts[i].id === route.contactId) ||
+                        (chat && contacts[i].id === chat.contactId) ||
+                        contacts[i].chatId === route.chatId) {
+                        contact = contacts[i];
+                        break;
+                    }
+                }
+
+                return { chat: chat, contact: contact };
+            }
+
+            function readHistoryBuckets() {
+                var raw = readJSON(CHAT_HISTORY_KEY);
+                if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+                    return raw;
+                }
+                return {};
+            }
+
+            function writeHistoryBuckets(map) {
+                localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(map || {}));
+            }
+
+            function formatMessageTime(value) {
+                if (value) {
+                    return value;
+                }
+                var now = new Date();
+                return String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+            }
+
+            function normalizeStoredMessage(item) {
+                if (!item) {
+                    return null;
+                }
+                if ((item.from === "me" || item.from === "them") && typeof item.text === "string" && item.text.trim()) {
+                    return {
+                        role: item.from === "me" ? "user" : "assistant",
+                        content: item.text.trim(),
+                        time: item.time || ""
+                    };
+                }
+                if ((item.role === "user" || item.role === "assistant") && typeof item.content === "string" && item.content.trim()) {
+                    return {
+                        role: item.role,
+                        content: item.content.trim(),
+                        time: item.time || ""
+                    };
+                }
+                return null;
+            }
+
+            function serializeHistoryItem(item) {
+                if (!item || !item.content) {
+                    return null;
+                }
+                return {
+                    from: item.role === "user" ? "me" : "them",
+                    text: item.content,
+                    time: formatMessageTime(item.time)
+                };
+            }
 
             function isAssistantAvatar(target) {
                 if (!target || !target.closest) {
@@ -1365,23 +1471,26 @@
 
             function loadHistory() {
                 var raw = readJSON(CHAT_HISTORY_KEY);
-                if (!Array.isArray(raw)) {
+                var list = null;
+
+                if (Array.isArray(raw)) {
+                    list = raw;
+                } else {
+                    list = readHistoryBuckets()[chatState.chatId];
+                }
+
+                if (!Array.isArray(list)) {
                     return null;
                 }
 
-                return raw.filter(function(item) {
-                    return item && (item.role === "user" || item.role === "assistant") && typeof item.content === "string" && item.content.trim();
-                }).map(function(item) {
-                    return {
-                        role: item.role,
-                        content: item.content.trim()
-                    };
-                });
+                return list.map(normalizeStoredMessage).filter(Boolean);
             }
 
             function saveHistory() {
                 chatState.history = trimHistory(chatState.history || []);
-                localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatState.history));
+                var buckets = readHistoryBuckets();
+                buckets[chatState.chatId] = chatState.history.map(serializeHistoryItem).filter(Boolean);
+                writeHistoryBuckets(buckets);
             }
 
             function computePendingUserCount(history) {
@@ -1474,6 +1583,8 @@
             }
 
             function applyHeaderAndStyle() {
+                var route = parseChatRoute();
+                var linked = findChatMeta(route);
                 var settings = readJSON(STORAGE_KEY);
                 settings = settings || {};
 
@@ -1486,8 +1597,11 @@
                     ? [settings.detail && settings.detail.targetRelation, settings.detail && settings.detail.targetRegion].filter(Boolean).join(" · ")
                     : "简约模式 · " + ((settings.simple && settings.simple.callName) || "Miffy");
 
-                var previewTitle = readText(STORAGE_KEY + "_preview_name", title);
-                var previewSubtitle = readText(STORAGE_KEY + "_preview_subtitle", subtitle);
+                var routeName = route.name || (linked.chat && linked.chat.name) || (linked.contact && linked.contact.name) || "";
+                var routeCallName = route.callName || (linked.chat && linked.chat.callName) || (linked.contact && linked.contact.callName) || "";
+                var routeAvatar = route.avatar || (linked.chat && linked.chat.avatar) || (linked.contact && linked.contact.avatar) || "";
+                var previewTitle = routeName || readText(STORAGE_KEY + "_preview_name", title);
+                var previewSubtitle = routeCallName ? ("联系人 · " + routeCallName) : readText(STORAGE_KEY + "_preview_subtitle", subtitle);
                 var targetAvatarText = extractAvatarText(previewTitle || title);
                 var selfName = mode === "detail"
                     ? (settings.detail && settings.detail.selfName) || "Miffy"
@@ -1503,7 +1617,7 @@
                 var simpleAvatars = Object.assign({}, legacyAvatars, avatarsRaw.simple || {});
                 var detailAvatars = Object.assign({}, avatarsRaw.detail || {});
                 var activeAvatars = mode === "detail" ? detailAvatars : simpleAvatars;
-                var targetAvatarUrl = activeAvatars.targetUrl || readText(STORAGE_KEY + "_avatar_target", "");
+                var targetAvatarUrl = routeAvatar || activeAvatars.targetUrl || readText(STORAGE_KEY + "_avatar_target", "");
                 var selfAvatarUrl = activeAvatars.selfUrl || readText(STORAGE_KEY + "_avatar_self", "");
 
                 applyBubbleStyle(settings);
@@ -1522,6 +1636,8 @@
                 applyAvatarElement(incomingAvatar2, incomingAvatarLabel2, targetAvatarText, avatarGradient, targetAvatarUrl);
                 applyAvatarElement(selfAvatar1, selfAvatarLabel1, selfAvatarText, selfGradient, selfAvatarUrl);
                 applyAvatarElement(selfAvatar2, selfAvatarLabel2, selfAvatarText, selfGradient, selfAvatarUrl);
+                chatState.chatId = route.chatId || "default";
+                chatState.contactId = route.contactId || (linked.chat && linked.chat.contactId) || (linked.contact && linked.contact.id) || "";
                 chatState.title = previewTitle || title || "Winter";
                 chatState.avatarText = targetAvatarText;
                 chatState.avatarGradient = avatarGradient;
@@ -1661,7 +1777,7 @@
 
                         replies.forEach(function(reply) {
                             addMessageRow("assistant", reply);
-                            chatState.history.push({ role: "assistant", content: reply });
+                            chatState.history.push({ role: "assistant", content: reply, time: formatMessageTime() });
                         });
 
                         chatState.history = trimHistory(chatState.history);
@@ -1904,7 +2020,7 @@
 
                 if (rawInput) {
                     addMessageRow("user", rawInput);
-                    chatState.history.push({ role: "user", content: rawInput });
+                    chatState.history.push({ role: "user", content: rawInput, time: formatMessageTime() });
                     chatState.history = trimHistory(chatState.history);
                     chatState.pendingUserCount += 1;
                     saveHistory();
