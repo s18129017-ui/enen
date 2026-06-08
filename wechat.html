@@ -306,8 +306,6 @@
                     <div class="c-item"><div class="avatar"><div class="icon-group"></div></div><span class="c-name-text">Group Chats</span></div>
                 </div>
                 <div id="dynamicContacts"></div>
-                <!-- Vue 挂载容器：如果存在，widgets 会自动挂载到此处 -->
-                <div id="miffy-contacts"></div>
                 <div class="index-letter">A</div>
                 <div class="entry-link"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Aki</span></div></div>
                 <div class="divider" style="margin-left:75px"></div>
@@ -398,8 +396,6 @@
                     </div>
                 </div>
             </div>
-                <!-- Vue 挂载容器 for Me widget -->
-                <div id="miffy-me" style="padding:12px"></div>
         </div>
         <nav class="bottom-nav">
             <label for="tab-1" class="nav-label lbl-1">
@@ -630,11 +626,7 @@
             renderSavedChats();
         });
     </script>
-</script>
-        <!-- 引入 Vue 全局构建与本地 widgets（放在页面尾部确保 DOM 可用） -->
-        <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-        <script src="widgets/contacts-widget.js"></script>
-        <script src="widgets/me-widget.js"></script>
+    </script>
     <script src="nav-me.js"></script>
 </body>
 </html>
