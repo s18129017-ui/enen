@@ -920,7 +920,7 @@
         </div>
 
         <header class="chat-header">
-            <div class="header-left"><a class="back-link" href="wechat.html?tab=contacts" aria-label="返回微信主页"><div class="i-back"></div></a></div>
+            <div class="header-left"><a class="back-link" href="wechat.html?tab=messages" aria-label="返回微信主页"><div class="i-back"></div></a></div>
             <div class="header-center">
                 <div class="chat-title" id="chatTitle">Winter <div class="online-dot"></div></div>
                 <div class="chat-subtitle" id="chatSubtitle">Active now</div>
@@ -2601,10 +2601,10 @@
                         backLink.addEventListener('click', function(e) {
                             e.preventDefault();
                             var target = 'wechat.html';
-                            if (chatState.contactId) {
-                                target += '?tab=contacts&contactId=' + encodeURIComponent(chatState.contactId);
-                            } else if (chatState.chatId && chatState.chatId !== 'default') {
+                            if (chatState.chatId && chatState.chatId !== 'default') {
                                 target += '?tab=messages&chatId=' + encodeURIComponent(chatState.chatId);
+                            } else if (chatState.contactId) {
+                                target += '?tab=messages&contactId=' + encodeURIComponent(chatState.contactId);
                             }
                             window.location.href = target;
                         });
