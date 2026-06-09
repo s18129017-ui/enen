@@ -22,6 +22,7 @@
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --chat-footer-space: calc(92px + var(--safe-bottom));
+            --attachment-panel-height: 0px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -114,7 +115,7 @@
         .i-more { width: 4px; height: 4px; background: var(--text-dark); border-radius: 50%; box-shadow: -7px 0 0 var(--text-dark), 7px 0 0 var(--text-dark); cursor: pointer;}
 
         /* 聊天主体 */
-        .chat-body { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 20px var(--chat-footer-space); display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; }
+        .chat-body { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 20px calc(var(--chat-footer-space) + var(--attachment-panel-height)); display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; }
         .chat-body::-webkit-scrollbar { display: none; }
         .time-divider { align-self: center; font-size: 11px; color: var(--text-gray); background: rgba(212, 165, 180, 0.15); padding: 4px 12px; border-radius: 12px; margin: 10px 0; }
         .msg-row { display: flex; align-items: flex-end; gap: 10px; max-width: 100%; }
@@ -254,12 +255,29 @@
             padding: 10px 20px calc(14px + max(10px, var(--safe-bottom))); display: flex; align-items: center; gap: 12px;
             background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border-top: 1px solid var(--border-color); border-radius: 0; position: sticky; bottom: 0;
+            z-index: 40;
         }
 
         .footer-icon { width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; opacity: 0.7; }
+        .footer-icon-btn {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .footer-icon-btn[aria-expanded="true"] .i-add {
+            transform: rotate(45deg);
+        }
         
         /* 加号图标 (移到了左边) */
         .i-add { width: 22px; height: 22px; border: 2px solid var(--text-dark); border-radius: 50%; position: relative; }
+        .i-add { transition: transform 0.2s ease; }
         .i-add::before, .i-add::after { content:''; position:absolute; background: var(--text-dark); border-radius: 2px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .i-add::before { width: 10px; height: 2px; } .i-add::after { width: 2px; height: 10px; }
 
@@ -310,6 +328,219 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .attachment-panel {
+            max-height: 0;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(248, 246, 247, 0.96), rgba(244, 234, 236, 0.96));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid var(--border-color);
+            transition: max-height 0.28s ease, padding 0.28s ease;
+            padding: 0 20px;
+            box-shadow: 0 -8px 24px rgba(212, 165, 180, 0.08);
+        }
+        .attachment-panel.show {
+            max-height: 320px;
+            padding: 18px 20px calc(18px + max(10px, var(--safe-bottom)));
+        }
+        .attachment-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px 10px;
+        }
+        .attachment-item {
+            border: none;
+            background: transparent;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 0;
+        }
+        .attachment-icon {
+            width: 66px;
+            height: 66px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.68);
+            border: 1px solid rgba(212, 165, 180, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 18px rgba(212, 165, 180, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            position: relative;
+        }
+        .attachment-label {
+            font-size: 12px;
+            color: var(--text-dark);
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .attachment-glyph {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            color: var(--dusty-pink-dark);
+        }
+        .attachment-glyph::before,
+        .attachment-glyph::after {
+            content: "";
+            position: absolute;
+            box-sizing: border-box;
+        }
+
+        .glyph-album::before {
+            inset: 6px 3px 5px;
+            border: 2px solid currentColor;
+            border-radius: 6px;
+        }
+        .glyph-album::after {
+            left: 8px;
+            bottom: 9px;
+            width: 16px;
+            height: 9px;
+            border-left: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: skewX(-30deg) rotate(-8deg);
+        }
+
+        .glyph-camera::before {
+            left: 4px;
+            top: 10px;
+            width: 24px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-radius: 6px;
+        }
+        .glyph-camera::after {
+            left: 11px;
+            top: 14px;
+            width: 10px;
+            height: 10px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            box-shadow: -6px -7px 0 -5px currentColor;
+        }
+
+        .glyph-location::before {
+            left: 8px;
+            top: 3px;
+            width: 16px;
+            height: 22px;
+            border: 2px solid currentColor;
+            border-radius: 50% 50% 50% 50% / 45% 45% 65% 65%;
+            transform: rotate(45deg);
+        }
+        .glyph-location::after {
+            left: 13px;
+            top: 10px;
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+        }
+
+        .glyph-mic::before {
+            left: 11px;
+            top: 5px;
+            width: 10px;
+            height: 15px;
+            border: 2px solid currentColor;
+            border-radius: 8px;
+            background: transparent;
+        }
+        .glyph-mic::after {
+            left: 8px;
+            top: 18px;
+            width: 16px;
+            height: 10px;
+            border: 2px solid currentColor;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 6px 10px 0 -5px currentColor, 0 14px 0 -6px currentColor;
+        }
+
+        .glyph-favorite::before {
+            left: 5px;
+            top: 5px;
+            width: 22px;
+            height: 22px;
+            background: currentColor;
+            clip-path: polygon(50% 0%, 61% 36%, 100% 36%, 68% 58%, 79% 100%, 50% 74%, 21% 100%, 32% 58%, 0% 36%, 39% 36%);
+        }
+
+        .glyph-card::before {
+            left: 4px;
+            top: 7px;
+            width: 24px;
+            height: 18px;
+            border: 2px solid currentColor;
+            border-radius: 6px;
+        }
+        .glyph-card::after {
+            left: 9px;
+            top: 12px;
+            width: 14px;
+            height: 2px;
+            background: currentColor;
+            box-shadow: 0 5px 0 currentColor;
+        }
+
+        .glyph-file::before {
+            left: 7px;
+            top: 4px;
+            width: 18px;
+            height: 24px;
+            border: 2px solid currentColor;
+            border-radius: 4px;
+        }
+        .glyph-file::after {
+            right: 7px;
+            top: 4px;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid currentColor;
+            border-right: 2px solid currentColor;
+            background: linear-gradient(135deg, transparent 49%, currentColor 50%, currentColor 100%);
+            border-top-right-radius: 3px;
+        }
+
+        .glyph-music::before {
+            left: 14px;
+            top: 6px;
+            width: 2px;
+            height: 16px;
+            background: currentColor;
+            box-shadow: 7px 3px 0 0 currentColor;
+        }
+        .glyph-music::after {
+            left: 9px;
+            top: 19px;
+            width: 8px;
+            height: 8px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            box-shadow: 10px -3px 0 -2px currentColor, 10px 0 0 0 currentColor;
+        }
+
+        @media (max-width: 380px) {
+            .attachment-grid {
+                gap: 16px 8px;
+            }
+            .attachment-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 16px;
+                font-size: 27px;
+            }
+            .attachment-label {
+                font-size: 11px;
+            }
         }
 
         .typing {
@@ -725,7 +956,11 @@
         <!-- 优化后的底部输入栏 -->
         <footer class="chat-footer">
             <!-- 左侧：加号图标 -->
-            <div class="footer-icon"><div class="i-add"></div></div>
+            <div class="footer-icon">
+                <button class="footer-icon-btn" id="attachmentToggle" type="button" aria-label="更多功能" aria-expanded="false" aria-controls="attachmentPanel">
+                    <div class="i-add"></div>
+                </button>
+            </div>
             
             <!-- 中间：输入框 (内含笑脸) -->
             <div class="input-wrapper">
@@ -738,6 +973,19 @@
                 <div class="i-arrow-up"></div>
             </button>
         </footer>
+
+        <div class="attachment-panel" id="attachmentPanel" aria-hidden="true">
+            <div class="attachment-grid">
+                <button class="attachment-item" type="button" data-tool-name="相册"><div class="attachment-icon"><div class="attachment-glyph glyph-album"></div></div><div class="attachment-label">相册</div></button>
+                <button class="attachment-item" type="button" data-tool-name="拍摄"><div class="attachment-icon"><div class="attachment-glyph glyph-camera"></div></div><div class="attachment-label">拍摄</div></button>
+                <button class="attachment-item" type="button" data-tool-name="位置"><div class="attachment-icon"><div class="attachment-glyph glyph-location"></div></div><div class="attachment-label">位置</div></button>
+                <button class="attachment-item" type="button" data-tool-name="语音输入"><div class="attachment-icon"><div class="attachment-glyph glyph-mic"></div></div><div class="attachment-label">语音输入</div></button>
+                <button class="attachment-item" type="button" data-tool-name="收藏"><div class="attachment-icon"><div class="attachment-glyph glyph-favorite"></div></div><div class="attachment-label">收藏</div></button>
+                <button class="attachment-item" type="button" data-tool-name="个人名片"><div class="attachment-icon"><div class="attachment-glyph glyph-card"></div></div><div class="attachment-label">个人名片</div></button>
+                <button class="attachment-item" type="button" data-tool-name="文件"><div class="attachment-icon"><div class="attachment-glyph glyph-file"></div></div><div class="attachment-label">文件</div></button>
+                <button class="attachment-item" type="button" data-tool-name="音乐"><div class="attachment-icon"><div class="attachment-glyph glyph-music"></div></div><div class="attachment-label">音乐</div></button>
+            </div>
+        </div>
 
     </div>
 
@@ -829,6 +1077,9 @@
             var selfAvatarLabel1 = document.getElementById("selfAvatarLabel1");
             var selfAvatarLabel2 = document.getElementById("selfAvatarLabel2");
             var sendBtn = document.getElementById("sendBtn");
+            var attachmentToggle = document.getElementById("attachmentToggle");
+            var attachmentPanel = document.getElementById("attachmentPanel");
+            var attachmentItems = Array.prototype.slice.call(document.querySelectorAll(".attachment-item"));
             var chatInput = document.getElementById("chatInput");
             var toast = document.getElementById("chatToast");
             var floatingOrb = document.getElementById("floatingOrb");
@@ -865,6 +1116,7 @@
                 editingBubble: null,
                 actionBubble: null
             };
+            var activeReplyRequest = null;
 
             function parseChatRoute() {
                 var params = new URLSearchParams(window.location.search || "");
@@ -1549,6 +1801,49 @@
                 }, 1600);
             }
 
+            function syncAttachmentPanelHeight() {
+                if (!attachmentPanel) {
+                    return;
+                }
+                var height = attachmentPanel.classList.contains("show") ? attachmentPanel.scrollHeight : 0;
+                document.documentElement.style.setProperty("--attachment-panel-height", height + "px");
+            }
+
+            function openAttachmentPanel() {
+                if (!attachmentPanel || !attachmentToggle) {
+                    return;
+                }
+                attachmentPanel.classList.add("show");
+                attachmentPanel.setAttribute("aria-hidden", "false");
+                attachmentToggle.setAttribute("aria-expanded", "true");
+                syncAttachmentPanelHeight();
+                if (chatBody) {
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }
+            }
+
+            function closeAttachmentPanel() {
+                if (!attachmentPanel || !attachmentToggle) {
+                    return;
+                }
+                attachmentPanel.classList.remove("show");
+                attachmentPanel.setAttribute("aria-hidden", "true");
+                attachmentToggle.setAttribute("aria-expanded", "false");
+                syncAttachmentPanelHeight();
+            }
+
+            function toggleAttachmentPanel() {
+                if (!attachmentPanel) {
+                    return;
+                }
+                if (attachmentPanel.classList.contains("show")) {
+                    closeAttachmentPanel();
+                } else {
+                    closeAttachmentPanel();
+                    openAttachmentPanel();
+                }
+            }
+
             function escapeHtml(str) {
                 if (str === null || str === undefined) {
                     return "";
@@ -1708,8 +2003,33 @@
                 if (!sendBtn) {
                     return;
                 }
-                sendBtn.disabled = !!loading;
+                sendBtn.disabled = false;
                 sendBtn.setAttribute("aria-busy", loading ? "true" : "false");
+                sendBtn.setAttribute("aria-label", loading ? "中断回复" : "发送消息");
+                sendBtn.classList.toggle("is-loading", !!loading);
+            }
+
+            function abortActiveReply(options) {
+                if (!activeReplyRequest) {
+                    return false;
+                }
+
+                var request = activeReplyRequest;
+                activeReplyRequest = null;
+
+                if (request.typingEl) {
+                    removeTyping(request.typingEl);
+                }
+                if (request.controller) {
+                    request.controller.abort(options && options.reason ? options.reason : "manual-abort");
+                }
+
+                setLoading(false);
+
+                if (!options || options.silent !== true) {
+                    showToast("已打断回复");
+                }
+                return true;
             }
 
             function collectVisibleHistory() {
@@ -1777,11 +2097,20 @@
 
                 setLoading(true);
                 var typingEl = appendTyping();
+                var requestState = {
+                    controller: null,
+                    typingEl: typingEl,
+                    aborted: false
+                };
+                activeReplyRequest = requestState;
                 var messageWindow = baseHistory.slice(-24);
                 var payload = [{ role: "system", content: buildSystemPrompt() }].concat(messageWindow);
 
-                callChatApi(preset, payload)
+                callChatApi(preset, payload, requestState)
                     .then(function(data) {
+                        if (activeReplyRequest !== requestState) {
+                            return;
+                        }
                         removeTyping(typingEl);
                         var content = parseAssistantContent(data);
                         var replies = splitAssistantLines(content);
@@ -1800,11 +2129,20 @@
                         saveHistory();
                     })
                     .catch(function(error) {
+                        if (activeReplyRequest !== requestState) {
+                            return;
+                        }
                         removeTyping(typingEl);
+                        if (error && error.isManualAbort) {
+                            return;
+                        }
                         showToast("发送失败：" + (error && error.message ? error.message : "未知错误"));
                     })
                     .finally(function() {
-                        setLoading(false);
+                        if (activeReplyRequest === requestState) {
+                            activeReplyRequest = null;
+                            setLoading(false);
+                        }
                     });
             }
 
@@ -1902,8 +2240,11 @@
                 return null;
             }
 
-            function fetchWithTimeout(url, options, timeoutMs) {
-                var controller = new AbortController();
+            function fetchWithTimeout(url, options, timeoutMs, requestState) {
+                var controller = requestState && requestState.controller ? requestState.controller : new AbortController();
+                if (requestState) {
+                    requestState.controller = controller;
+                }
                 var timer = window.setTimeout(function() {
                     controller.abort();
                 }, timeoutMs || 30000);
@@ -1915,13 +2256,18 @@
                     })
                     .catch(function(err) {
                         if (err && err.name === "AbortError") {
+                            if (requestState && activeReplyRequest !== requestState) {
+                                var manualAbortError = new Error("已手动中断");
+                                manualAbortError.isManualAbort = true;
+                                throw manualAbortError;
+                            }
                             throw new Error("请求超时");
                         }
                         throw err;
                     });
             }
 
-            function callChatApi(preset, messages) {
+            function callChatApi(preset, messages, requestState) {
                 var base = normalizeBaseUrl(preset.baseUrl);
                 var endpointCandidates = [
                     base + "/chat/completions",
@@ -1946,7 +2292,7 @@
                             messages: messages,
                             temperature: 0.8
                         })
-                    }, 45000)
+                    }, 45000, requestState)
                     .then(function(response) {
                         if (!response.ok) {
                             throw new Error("HTTP " + response.status + " @ " + url);
@@ -1954,6 +2300,9 @@
                         return response.json();
                     })
                     .catch(function(err) {
+                        if (err && err.isManualAbort) {
+                            return Promise.reject(err);
+                        }
                         return tryNext(err);
                     });
                 }
@@ -2025,6 +2374,11 @@
             }
 
             function sendMessages() {
+                if (activeReplyRequest) {
+                    abortActiveReply();
+                    return;
+                }
+
                 var preset = getActivePreset();
                 if (!preset || !preset.baseUrl || !preset.apiKey || !preset.model) {
                     showToast("请先在 API 配置里启用可用预设");
@@ -2081,9 +2435,24 @@
 });
                 autoSizeInput();
             }
+            if (attachmentToggle) {
+                attachmentToggle.addEventListener("click", function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleAttachmentPanel();
+                });
+            }
             if (sendBtn) {
                 sendBtn.addEventListener("click", sendMessages);
             }
+
+            attachmentItems.forEach(function(item) {
+                item.addEventListener("click", function() {
+                    var toolName = item.getAttribute("data-tool-name") || "该功能";
+                    showToast(toolName + " 功能入口已展开");
+                    closeAttachmentPanel();
+                });
+            });
 
             buildNumberOptions(replyMinSelect, 1, 20);
             buildNumberOptions(replyMaxSelect, 1, 20);
@@ -2163,6 +2532,13 @@
                     regenerateAssistantRoundFromAvatar(event.target.closest(".msg-avatar"));
                     return;
                 }
+                if (attachmentPanel && attachmentPanel.classList.contains("show")) {
+                    var clickedToggle = attachmentToggle && attachmentToggle.contains(event.target);
+                    var clickedPanel = attachmentPanel.contains(event.target);
+                    if (!clickedToggle && !clickedPanel) {
+                        closeAttachmentPanel();
+                    }
+                }
                 if (!bubbleActionMenu || !bubbleActionMenu.classList.contains("show")) {
                     return;
                 }
@@ -2176,6 +2552,9 @@
                 closeBubbleActionMenu();
             });
             document.addEventListener("keydown", function(event) {
+                if (event.key === "Escape" && attachmentPanel && attachmentPanel.classList.contains("show")) {
+                    closeAttachmentPanel();
+                }
                 if (event.key === "Escape" && fabModal && fabModal.classList.contains("show")) {
                     closeFabModal();
                 }
@@ -2203,6 +2582,8 @@
             initExistingBubbles();
             bindBubbleEditor();
             initFloatingOrb();
+            syncAttachmentPanelHeight();
+            window.addEventListener("resize", syncAttachmentPanelHeight);
 
             // 防止点击跳转时加载到缓存中的旧版本脚本，追加时间戳避免缓存
             (function() {
