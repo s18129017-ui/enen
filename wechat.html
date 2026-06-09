@@ -503,7 +503,6 @@
                 var query = params.toString();
                 return '聊天界面.html' + (query ? '?' + query : '');
             }
-            }
             function readChatHistories(){
                 try{
                     var raw = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '{}');
@@ -594,7 +593,7 @@
                     var item = chats[j];
                     var displayName = item.name || item.callName || 'Unnamed';
                     var link = document.createElement('a');
-                    link.href = buildChatRoute(item);
+                    link.className = 'entry-link';
                     link.href = buildChatDetailHref(item);
                     link.setAttribute('data-injected-chat', '1');
 
@@ -651,43 +650,16 @@
                 selfSave.addEventListener('click', function(){
                     var name = (document.getElementById('contactName') && document.getElementById('contactName').value || '').trim();
                     if(!name){ alert('请填写昵称'); return; }
-                    var contactId = createContactId();
-                    var chatId = createChatId(contactId);
                     var callName = (document.getElementById('contactCallName') && document.getElementById('contactCallName').value || '').trim();
-                    contacts.push({ id: contactId, chatId: chatId, name: name, callName: callName, avatar: avatar });
                     var contactId = createId('c');
                     var chatId = createId('chat');
+                    var avatar = (document.getElementById('contactAvatarUrl') && document.getElementById('contactAvatarUrl').value || '').trim();
                     var contacts = readContacts();
-                    chats.unshift({ id: chatId, contactId: contactId, name: name, callName: callName, avatar: avatar, lastMessage: '新联系人', time: buildTimeText() });
+                    contacts.push({ id: contactId, chatId: chatId, name: name, callName: callName, avatar: avatar });
+                    writeContacts(contacts);
+
+                    var chats = readChats();
                     chats.unshift({ id: chatId, contactId: contactId, name: name, callName: callName, avatar: avatar, lastMessage: '新联系人', time: formatCurrentTime() });
-
-                    var historyMap = readChatHistory();
-                    if(!Array.isArray(historyMap[chatId])) historyMap[chatId] = [];
-                    writeChatHistory(historyMap);
-
-                    var settingsMap = readChatSettingsMap();
-                    settingsMap[chatId] = {
-                        simple: {
-                            targetName: name,
-                            callName: callName,
-                            persona: '',
-                            avoid: '',
-                            selfName: 'Miffy',
-                            selfTag: '用户',
-                            selfPersona: ''
-                        },
-                        avatars: {
-                            simple: {
-                                targetUrl: avatar,
-                                selfUrl: ''
-                            }
-                        },
-                        bubbleStyle: {
-                            preset: 'pink',
-                            customCss: ''
-                        }
-                    };
-                    writeChatSettingsMap(settingsMap);
                     writeChats(chats);
 
                     var histories = readChatHistories();
