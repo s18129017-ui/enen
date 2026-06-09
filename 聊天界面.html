@@ -887,6 +887,14 @@
                 return Array.isArray(list) ? list : [];
             }
 
+            function readSettingsBuckets() {
+                var raw = readJSON("miffy_chat_settings_by_chat_v1");
+                if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+                    return raw;
+                }
+                return {};
+            }
+
             function findChatMeta(route) {
                 var chats = readChats();
                 var contacts = readContacts();
@@ -914,6 +922,14 @@
                 }
 
                 return { chat: chat, contact: contact };
+            }
+
+            function getScopedChatSettings(chatId) {
+                var buckets = readSettingsBuckets();
+                if (chatId && buckets[chatId] && typeof buckets[chatId] === "object") {
+                    return buckets[chatId];
+                }
+                return readJSON(STORAGE_KEY) || null;
             }
 
             function readHistoryBuckets() {
@@ -1585,8 +1601,7 @@
             function applyHeaderAndStyle() {
                 var route = parseChatRoute();
                 var linked = findChatMeta(route);
-                var settings = readJSON(STORAGE_KEY);
-                settings = settings || {};
+                var settings = getScopedChatSettings(route.chatId || chatState.chatId) || {};
 
                 var mode = settings.mode === "detail" ? "detail" : "simple";
                 var title = mode === "detail"
@@ -2197,8 +2212,16 @@
                         dl.addEventListener('click', function(e) {
                             e.preventDefault();
                             var href = dl.getAttribute('href') || 'chat-settings.html';
-                            href = href.split('?')[0] + '?_ts=' + Date.now();
-                            window.location.href = href;
+                            var base = href.split('?')[0];
+                            var params = new URLSearchParams();
+                            if (chatState.chatId) {
+                                params.set('chatId', chatState.chatId);
+                            }
+                            if (chatState.contactId) {
+                                params.set('contactId', chatState.contactId);
+                            }
+                            params.set('_ts', Date.now());
+                            window.location.href = base + '?' + params.toString();
                         });
                     }
                 } catch (err) {

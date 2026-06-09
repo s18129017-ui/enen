@@ -484,6 +484,7 @@
             }
             function readChats(){ try{ return JSON.parse(localStorage.getItem(CHATS_KEY)||'[]'); }catch(e){ return []; } }
             function writeChats(list){ try{ localStorage.setItem(CHATS_KEY, JSON.stringify(list||[])); }catch(e){}
+            }
             function readChatHistory(){ try{ var raw = JSON.parse(localStorage.getItem('miffy_chat_history_v1')||'{}'); return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}; }catch(e){ return {}; } }
             function writeChatHistory(map){ try{ localStorage.setItem('miffy_chat_history_v1', JSON.stringify(map||{})); }catch(e){}
             }
@@ -678,7 +679,6 @@
             renderContacts();
             renderSavedChats();
         });
-    </script>
     </script>
     <script src="nav-me.js"></script>
 </body>

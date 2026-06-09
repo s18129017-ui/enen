@@ -898,8 +898,55 @@ body {
                 });
             }
 
+            function getRouteContext() {
+                var params = new URLSearchParams(window.location.search || "");
+                return {
+                    chatId: params.get("chatId") || "",
+                    contactId: params.get("contactId") || ""
+                };
+            }
+
+            var routeContext = getRouteContext();
+            var CHAT_SETTINGS_BY_CHAT_KEY = "miffy_chat_settings_by_chat_v1";
+            var CHATS_KEY = "miffy_chats_v1";
+            var CONTACTS_KEY = "miffy_contacts_v1";
+
+            function readChatSettingsBuckets() {
+                try {
+                    var raw = localStorage.getItem(CHAT_SETTINGS_BY_CHAT_KEY);
+                    var parsed = raw ? JSON.parse(raw) : {};
+                    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+                } catch (error) {
+                    return {};
+                }
+            }
+
+            function writeChatSettingsBuckets(map) {
+                localStorage.setItem(CHAT_SETTINGS_BY_CHAT_KEY, JSON.stringify(map || {}));
+            }
+
+            function readList(key) {
+                try {
+                    var raw = localStorage.getItem(key);
+                    var parsed = raw ? JSON.parse(raw) : [];
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (error) {
+                    return [];
+                }
+            }
+
+            function writeList(key, list) {
+                localStorage.setItem(key, JSON.stringify(Array.isArray(list) ? list : []));
+            }
+
             function loadSettings() {
                 try {
+                    if (routeContext.chatId) {
+                        var buckets = readChatSettingsBuckets();
+                        if (buckets[routeContext.chatId]) {
+                            return buckets[routeContext.chatId];
+                        }
+                    }
                     var raw = localStorage.getItem(STORAGE_KEY);
                     return raw ? JSON.parse(raw) : null;
                 } catch (error) {
@@ -910,7 +957,63 @@ body {
 
             function saveSettings(settings) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+                if (routeContext.chatId) {
+                    var buckets = readChatSettingsBuckets();
+                    buckets[routeContext.chatId] = settings;
+                    writeChatSettingsBuckets(buckets);
+                }
                 notifySaved();
+            }
+
+            function syncEntitiesFromSettings(settings) {
+                if (!routeContext.chatId) {
+                    return;
+                }
+
+                var simple = settings && settings.simple ? settings.simple : {};
+                var avatars = settings && settings.avatars && settings.avatars.simple ? settings.avatars.simple : {};
+                var targetName = (simple.targetName || "").trim();
+                var callName = (simple.callName || "").trim();
+                var avatar = (avatars.targetUrl || "").trim();
+                var subtitle = "简约模式" + (callName ? " · " + callName : "");
+                var chats = readList(CHATS_KEY);
+                var contacts = readList(CONTACTS_KEY);
+                var i;
+
+                for (i = 0; i < chats.length; i += 1) {
+                    if (chats[i] && chats[i].id === routeContext.chatId) {
+                        if (targetName) {
+                            chats[i].name = targetName;
+                        }
+                        chats[i].callName = callName;
+                        if (avatar) {
+                            chats[i].avatar = avatar;
+                        }
+                        chats[i].lastMessage = subtitle;
+                        break;
+                    }
+                }
+                writeList(CHATS_KEY, chats);
+
+                for (i = 0; i < contacts.length; i += 1) {
+                    if (!contacts[i]) {
+                        continue;
+                    }
+                    if (contacts[i].chatId === routeContext.chatId || (routeContext.contactId && contacts[i].id === routeContext.contactId)) {
+                        if (targetName) {
+                            contacts[i].name = targetName;
+                        }
+                        contacts[i].callName = callName;
+                        if (avatar) {
+                            contacts[i].avatar = avatar;
+                        }
+                        if (!contacts[i].chatId) {
+                            contacts[i].chatId = routeContext.chatId;
+                        }
+                        break;
+                    }
+                }
+                writeList(CONTACTS_KEY, contacts);
             }
 
             function saveBubbleStyleSettings(preset, customCss) {
@@ -1045,6 +1148,7 @@ body {
                 var activeAvatars = settings.avatars && settings.avatars.simple ? settings.avatars.simple : { targetUrl: "", selfUrl: "" };
                 localStorage.setItem(STORAGE_KEY + "_avatar_target", activeAvatars.targetUrl || "");
                 localStorage.setItem(STORAGE_KEY + "_avatar_self", activeAvatars.selfUrl || "");
+                syncEntitiesFromSettings(settings);
             }
 
             applySettings(loadSettings());
