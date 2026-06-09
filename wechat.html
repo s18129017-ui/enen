@@ -261,39 +261,7 @@
                     <div class="story-item"><div class="story-ring"><div class="avatar av-3"></div></div><span style="font-size:10px;color:var(--text-gray)">Isla</span></div>
                     <div class="story-item"><div class="story-ring"><div class="avatar av-4"></div></div><span style="font-size:10px;color:var(--text-gray)">Rin</span></div>
                 </div>
-                <a class="entry-link" href="聊天界面.html?chatId=chat_static_winter&contactId=contact_static_winter&name=Winter">
-                <div class="chat-item">
-                    <div class="chat-avatar-box"><div class="avatar av-1"></div><div class="status-dot"></div></div>
-                    <div class="chat-content">
-                        <div class="c-row"><span class="c-name">Winter</span><span class="c-time">21:12</span></div>
-                        <div class="c-row"><span class="c-msg">把今天的情绪，放进相册里。</span><span class="badge">2</span></div>
-                    </div>
-                </div>
-                </a>
-                <div class="divider"></div>
-                <div class="chat-item">
-                    <div class="chat-avatar-box"><div class="avatar av-5"></div></div>
-                    <div class="chat-content">
-                        <div class="c-row"><span class="c-name">File Transfer</span><span class="c-time">Yesterday</span></div>
-                        <div class="c-row"><span class="c-msg">[Image] design_draft.png</span></div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="chat-item">
-                    <div class="chat-avatar-box"><div class="avatar av-2"></div><div class="status-dot pink"></div></div>
-                    <div class="chat-content">
-                        <div class="c-row"><span class="c-name">Nako</span><span class="c-time">Wed</span></div>
-                        <div class="c-row"><span class="c-msg">周末要去喝咖啡吗？☕️</span></div>
-                    </div>
-                </div>
-                <div class="divider"></div>
-                <div class="chat-item">
-                    <div class="chat-avatar-box"><div class="avatar av-4"></div></div>
-                    <div class="chat-content">
-                        <div class="c-row"><span class="c-name">Miffy Group</span><span class="c-time">Mon</span></div>
-                        <div class="c-row"><span class="c-msg">Lina: 笔记上传啦~</span></div>
-                    </div>
-                </div>
+                <div id="messageList"></div>
             </div>
             <div id="page-2" class="page">
                 <header class="app-header glass">
@@ -306,16 +274,6 @@
                     <div class="c-item"><div class="avatar"><div class="icon-group"></div></div><span class="c-name-text">Group Chats</span></div>
                 </div>
                 <div id="dynamicContacts"></div>
-                <div class="index-letter">A</div>
-                <a class="entry-link" href="聊天界面.html?chatId=chat_static_aki&contactId=contact_static_aki&name=Aki"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Aki</span></div></a>
-                <div class="divider" style="margin-left:75px"></div>
-                <a class="entry-link" href="聊天界面.html?chatId=chat_static_alice&contactId=contact_static_alice&name=Alice"><div class="c-item"><div class="avatar av-5"></div><span class="c-name-text">Alice</span></div></a>
-                <div class="index-letter">I</div>
-                <a class="entry-link" href="聊天界面.html?chatId=chat_static_isla&contactId=contact_static_isla&name=Isla"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Isla</span></div></a>
-                <div class="index-letter">N</div>
-                <a class="entry-link" href="聊天界面.html?chatId=chat_static_nako&contactId=contact_static_nako&name=Nako"><div class="c-item"><div class="avatar av-2"></div><span class="c-name-text">Nako</span></div></a>
-                <div class="index-letter">W</div>
-                <a class="entry-link" href="聊天界面.html?chatId=chat_static_winter&contactId=contact_static_winter&name=Winter"><div class="c-item"><div class="avatar av-1"></div><span class="c-name-text">Winter</span></div></a>
             </div>
             <div id="page-3" class="page">
                 <header class="app-header" style="position:absolute; width:100%; background:transparent;">
@@ -568,27 +526,43 @@
             function renderContacts(){
                 var dyn = document.getElementById('dynamicContacts');
                 if(!dyn) return;
-                var list = readContacts();
+                var list = readContacts().slice().sort(function(a, b){
+                    var nameA = String((a && (a.name || a.callName)) || '').toLowerCase();
+                    var nameB = String((b && (b.name || b.callName)) || '').toLowerCase();
+                    return nameA.localeCompare(nameB);
+                });
                 dyn.innerHTML = '';
-                // newest first
-                for(var i=list.length-1;i>=0;i--){
+                var lastLetter = '';
+                for(var i=0;i<list.length;i++){
                     var c = list[i];
                     var displayName = c.name || c.callName || 'Unnamed';
+                    var firstLetter = displayName.charAt(0).toUpperCase() || '#';
+                    if(firstLetter !== lastLetter){
+                        var indexLetter = document.createElement('div');
+                        indexLetter.className = 'index-letter';
+                        indexLetter.textContent = /[A-Z]/.test(firstLetter) ? firstLetter : '#';
+                        dyn.appendChild(indexLetter);
+                        lastLetter = firstLetter;
+                    }
                     var a = document.createElement('a'); a.className='entry-link';
                     a.href = buildChatDetailHref({ id: c.chatId, contactId: c.id, name: c.name, callName: c.callName, avatar: c.avatar });
                     var row = document.createElement('div'); row.className='c-item';
                     var av = document.createElement('div'); av.className='avatar'; av.style.width='40px'; av.style.height='40px'; applyAvatarFallback(av, displayName, c.avatar);
                     var span = document.createElement('span'); span.className='c-name-text'; span.textContent = displayName;
                     row.appendChild(av); row.appendChild(span); a.appendChild(row); dyn.appendChild(a);
+                    if(i < list.length - 1){
+                        var divider = document.createElement('div');
+                        divider.className = 'divider';
+                        divider.style.marginLeft = '75px';
+                        dyn.appendChild(divider);
+                    }
                 }
             }
             function renderSavedChats(){
-                var page1 = document.getElementById('page-1');
-                if(!page1) return;
+                var messageList = document.getElementById('messageList');
+                if(!messageList) return;
                 var chats = readChats();
-                // remove previously injected chats only
-                var injected = page1.querySelectorAll('[data-injected-chat="1"]');
-                for(var i=0;i<injected.length;i++) injected[i].remove();
+                messageList.innerHTML = '';
 
                 for(var j=0;j<chats.length;j++){
                     var item = chats[j];
@@ -596,12 +570,13 @@
                     var link = document.createElement('a');
                     link.className = 'entry-link';
                     link.href = buildChatDetailHref(item);
-                    link.setAttribute('data-injected-chat', '1');
 
                     var chat = document.createElement('div');
                     chat.className = 'chat-item';
 
                     var avatarBox = document.createElement('div');
+
+                    var row1 = document.createElement('div');
                     avatarBox.className = 'chat-avatar-box';
                     var av = document.createElement('div');
                     av.className = 'avatar';
@@ -627,8 +602,15 @@
                     row2.className = 'c-row';
                     var msg = document.createElement('span');
                     msg.className = 'c-msg';
-                    msg.textContent = item.lastMessage || '新联系人';
+                    msg.textContent = item.lastMessage || '点击开始聊天';
                     row2.appendChild(msg);
+
+                    if(item.badge){
+                        var badge = document.createElement('span');
+                        badge.className = 'badge';
+                        badge.textContent = item.badge;
+                        row2.appendChild(badge);
+                    }
 
                     content.appendChild(row1);
                     content.appendChild(row2);
@@ -636,11 +618,11 @@
                     chat.appendChild(content);
                     link.appendChild(chat);
 
-                    var firstChat = page1.querySelector('.chat-item');
-                    if(firstChat){
-                        page1.insertBefore(link, firstChat.parentNode && firstChat.parentNode.classList && firstChat.parentNode.classList.contains('entry-link') ? firstChat.parentNode : firstChat);
-                    }else{
-                        page1.appendChild(link);
+                    messageList.appendChild(link);
+                    if(j < chats.length - 1){
+                        var divider = document.createElement('div');
+                        divider.className = 'divider';
+                        messageList.appendChild(divider);
                     }
                 }
             }
@@ -675,13 +657,16 @@
                         if(!chats[j].name) chats[j].name = options.name || '';
                         if(!chats[j].callName && options.callName) chats[j].callName = options.callName;
                         if(!chats[j].avatar && options.avatar) chats[j].avatar = options.avatar;
+                        if(!chats[j].badge && options.badge) chats[j].badge = options.badge;
                         break;
                     }
                 }
                 if(!chatExists){
-                    chats.push({ id: options.chatId, contactId: options.contactId, name: options.name || '', callName: options.callName || '', avatar: options.avatar || '', lastMessage: options.lastMessage || '', time: options.time || '' });
+                    chats.push({ id: options.chatId, contactId: options.contactId, name: options.name || '', callName: options.callName || '', avatar: options.avatar || '', lastMessage: options.lastMessage || '点击开始聊天', time: options.time || '', badge: options.badge || '' });
                     writeChats(chats);
                 } else {
+                    if(!chats[j].lastMessage) chats[j].lastMessage = options.lastMessage || '点击开始聊天';
+                    if(!chats[j].time) chats[j].time = options.time || '';
                     writeChats(chats);
                 }
 
@@ -721,7 +706,7 @@
                     writeContacts(contacts);
 
                     var chats = readChats();
-                    chats.unshift({ id: chatId, contactId: contactId, name: name, callName: callName, avatar: avatar, lastMessage: '新联系人', time: formatCurrentTime() });
+                    chats.unshift({ id: chatId, contactId: contactId, name: name, callName: callName, avatar: avatar, lastMessage: '点击开始聊天', time: formatCurrentTime() });
                     writeChats(chats);
 
                     var histories = readChatHistories();
@@ -734,7 +719,7 @@
                     document.getElementById('contactName').value=''; document.getElementById('contactCallName').value=''; document.getElementById('contactAvatarUrl').value='';
                 });
 
-            ensureStaticContact({ contactId:'contact_static_winter', chatId:'chat_static_winter', name:'Winter', lastMessage:'把今天的情绪，放进相册里。', time:'21:12' });
+            ensureStaticContact({ contactId:'contact_static_winter', chatId:'chat_static_winter', name:'Winter', lastMessage:'把今天的情绪，放进相册里。', time:'21:12', badge:'2' });
             ensureStaticContact({ contactId:'contact_static_nako', chatId:'chat_static_nako', name:'Nako', lastMessage:'周末要去喝咖啡吗？☕️', time:'Wed' });
             ensureStaticContact({ contactId:'contact_static_isla', chatId:'chat_static_isla', name:'Isla' });
             ensureStaticContact({ contactId:'contact_static_aki', chatId:'chat_static_aki', name:'Aki' });
