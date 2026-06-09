@@ -484,6 +484,25 @@
             }
             function readChats(){ try{ return JSON.parse(localStorage.getItem(CHATS_KEY)||'[]'); }catch(e){ return []; } }
             function writeChats(list){ try{ localStorage.setItem(CHATS_KEY, JSON.stringify(list||[])); }catch(e){}
+            function readChatHistory(){ try{ var raw = JSON.parse(localStorage.getItem('miffy_chat_history_v1')||'{}'); return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}; }catch(e){ return {}; } }
+            function writeChatHistory(map){ try{ localStorage.setItem('miffy_chat_history_v1', JSON.stringify(map||{})); }catch(e){}
+            }
+            function readChatSettingsMap(){ try{ var raw = JSON.parse(localStorage.getItem('miffy_chat_settings_by_chat_v1')||'{}'); return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}; }catch(e){ return {}; } }
+            function writeChatSettingsMap(map){ try{ localStorage.setItem('miffy_chat_settings_by_chat_v1', JSON.stringify(map||{})); }catch(e){}
+            }
+            function buildTimeText(){ var now = new Date(); return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); }
+            function createContactId(){ return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
+            function createChatId(contactId){ return 'chat_' + contactId; }
+            function buildChatRoute(item){
+                var params = new URLSearchParams();
+                if(item && item.id) params.set('chatId', item.id);
+                if(item && item.contactId) params.set('contactId', item.contactId);
+                if(item && item.name) params.set('name', item.name);
+                if(item && item.callName) params.set('callName', item.callName);
+                if(item && item.avatar) params.set('avatar', item.avatar);
+                var query = params.toString();
+                return '聊天界面.html' + (query ? '?' + query : '');
+            }
             }
             function readChatHistories(){
                 try{
@@ -575,7 +594,7 @@
                     var item = chats[j];
                     var displayName = item.name || item.callName || 'Unnamed';
                     var link = document.createElement('a');
-                    link.className = 'entry-link';
+                    link.href = buildChatRoute(item);
                     link.href = buildChatDetailHref(item);
                     link.setAttribute('data-injected-chat', '1');
 
@@ -632,16 +651,43 @@
                 selfSave.addEventListener('click', function(){
                     var name = (document.getElementById('contactName') && document.getElementById('contactName').value || '').trim();
                     if(!name){ alert('请填写昵称'); return; }
+                    var contactId = createContactId();
+                    var chatId = createChatId(contactId);
                     var callName = (document.getElementById('contactCallName') && document.getElementById('contactCallName').value || '').trim();
-                    var avatar = (document.getElementById('contactAvatarUrl') && document.getElementById('contactAvatarUrl').value || '').trim();
+                    contacts.push({ id: contactId, chatId: chatId, name: name, callName: callName, avatar: avatar });
                     var contactId = createId('c');
                     var chatId = createId('chat');
                     var contacts = readContacts();
-                    contacts.push({ id: contactId, chatId: chatId, name: name, callName: callName, avatar: avatar });
-                    writeContacts(contacts);
-
-                    var chats = readChats();
+                    chats.unshift({ id: chatId, contactId: contactId, name: name, callName: callName, avatar: avatar, lastMessage: '新联系人', time: buildTimeText() });
                     chats.unshift({ id: chatId, contactId: contactId, name: name, callName: callName, avatar: avatar, lastMessage: '新联系人', time: formatCurrentTime() });
+
+                    var historyMap = readChatHistory();
+                    if(!Array.isArray(historyMap[chatId])) historyMap[chatId] = [];
+                    writeChatHistory(historyMap);
+
+                    var settingsMap = readChatSettingsMap();
+                    settingsMap[chatId] = {
+                        simple: {
+                            targetName: name,
+                            callName: callName,
+                            persona: '',
+                            avoid: '',
+                            selfName: 'Miffy',
+                            selfTag: '用户',
+                            selfPersona: ''
+                        },
+                        avatars: {
+                            simple: {
+                                targetUrl: avatar,
+                                selfUrl: ''
+                            }
+                        },
+                        bubbleStyle: {
+                            preset: 'pink',
+                            customCss: ''
+                        }
+                    };
+                    writeChatSettingsMap(settingsMap);
                     writeChats(chats);
 
                     var histories = readChatHistories();
