@@ -943,9 +943,7 @@ body {
                 try {
                     if (routeContext.chatId) {
                         var buckets = readChatSettingsBuckets();
-                        if (buckets[routeContext.chatId]) {
-                            return buckets[routeContext.chatId];
-                        }
+                        return buckets[routeContext.chatId] || null;
                     }
                     var raw = localStorage.getItem(STORAGE_KEY);
                     return raw ? JSON.parse(raw) : null;
@@ -953,6 +951,17 @@ body {
                     console.warn("Failed to parse chat settings:", error);
                     return null;
                 }
+            }
+
+            function buildChatDetailHref() {
+                var params = new URLSearchParams();
+                if (routeContext.chatId) {
+                    params.set("chatId", routeContext.chatId);
+                }
+                if (routeContext.contactId) {
+                    params.set("contactId", routeContext.contactId);
+                }
+                return "聊天界面.html" + (params.toString() ? "?" + params.toString() : "");
             }
 
             function saveSettings(settings) {
@@ -1152,6 +1161,11 @@ body {
             }
 
             applySettings(loadSettings());
+
+            var backLink = document.querySelector(".back-link");
+            if (backLink) {
+                backLink.setAttribute("href", buildChatDetailHref());
+            }
 
             bubblePresetInputs.forEach(function(input) {
                 input.addEventListener("change", function() {

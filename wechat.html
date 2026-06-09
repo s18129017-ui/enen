@@ -261,7 +261,7 @@
                     <div class="story-item"><div class="story-ring"><div class="avatar av-3"></div></div><span style="font-size:10px;color:var(--text-gray)">Isla</span></div>
                     <div class="story-item"><div class="story-ring"><div class="avatar av-4"></div></div><span style="font-size:10px;color:var(--text-gray)">Rin</span></div>
                 </div>
-                <a class="entry-link" href="聊天界面.html">
+                <a class="entry-link" href="聊天界面.html?chatId=chat_static_winter&contactId=contact_static_winter&name=Winter">
                 <div class="chat-item">
                     <div class="chat-avatar-box"><div class="avatar av-1"></div><div class="status-dot"></div></div>
                     <div class="chat-content">
@@ -307,15 +307,15 @@
                 </div>
                 <div id="dynamicContacts"></div>
                 <div class="index-letter">A</div>
-                <div class="entry-link"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Aki</span></div></div>
+                <a class="entry-link" href="聊天界面.html?chatId=chat_static_aki&contactId=contact_static_aki&name=Aki"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Aki</span></div></a>
                 <div class="divider" style="margin-left:75px"></div>
-                <div class="entry-link"><div class="c-item"><div class="avatar av-5"></div><span class="c-name-text">Alice</span></div></div>
+                <a class="entry-link" href="聊天界面.html?chatId=chat_static_alice&contactId=contact_static_alice&name=Alice"><div class="c-item"><div class="avatar av-5"></div><span class="c-name-text">Alice</span></div></a>
                 <div class="index-letter">I</div>
-                <div class="entry-link"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Isla</span></div></div>
+                <a class="entry-link" href="聊天界面.html?chatId=chat_static_isla&contactId=contact_static_isla&name=Isla"><div class="c-item"><div class="avatar av-3"></div><span class="c-name-text">Isla</span></div></a>
                 <div class="index-letter">N</div>
-                <div class="entry-link"><div class="c-item"><div class="avatar av-2"></div><span class="c-name-text">Nako</span></div></div>
+                <a class="entry-link" href="聊天界面.html?chatId=chat_static_nako&contactId=contact_static_nako&name=Nako"><div class="c-item"><div class="avatar av-2"></div><span class="c-name-text">Nako</span></div></a>
                 <div class="index-letter">W</div>
-                <div class="entry-link"><div class="c-item"><div class="avatar av-1"></div><span class="c-name-text">Winter</span></div></div>
+                <a class="entry-link" href="聊天界面.html?chatId=chat_static_winter&contactId=contact_static_winter&name=Winter"><div class="c-item"><div class="avatar av-1"></div><span class="c-name-text">Winter</span></div></a>
             </div>
             <div id="page-3" class="page">
                 <header class="app-header" style="position:absolute; width:100%; background:transparent;">
@@ -646,9 +646,71 @@
                 }
             }
 
+            function ensureStaticContact(options){
+                if(!options || !options.contactId || !options.chatId) return;
+                var contacts = readContacts();
+                var contactExists = false;
+                for(var i=0;i<contacts.length;i++){
+                    if(contacts[i] && contacts[i].id === options.contactId){
+                        contactExists = true;
+                        if(!contacts[i].chatId) contacts[i].chatId = options.chatId;
+                        if(!contacts[i].name) contacts[i].name = options.name || '';
+                        if(!contacts[i].callName && options.callName) contacts[i].callName = options.callName;
+                        if(!contacts[i].avatar && options.avatar) contacts[i].avatar = options.avatar;
+                        break;
+                    }
+                }
+                if(!contactExists){
+                    contacts.push({ id: options.contactId, chatId: options.chatId, name: options.name || '', callName: options.callName || '', avatar: options.avatar || '' });
+                    writeContacts(contacts);
+                } else {
+                    writeContacts(contacts);
+                }
+
+                var chats = readChats();
+                var chatExists = false;
+                for(var j=0;j<chats.length;j++){
+                    if(chats[j] && chats[j].id === options.chatId){
+                        chatExists = true;
+                        if(!chats[j].contactId) chats[j].contactId = options.contactId;
+                        if(!chats[j].name) chats[j].name = options.name || '';
+                        if(!chats[j].callName && options.callName) chats[j].callName = options.callName;
+                        if(!chats[j].avatar && options.avatar) chats[j].avatar = options.avatar;
+                        break;
+                    }
+                }
+                if(!chatExists){
+                    chats.push({ id: options.chatId, contactId: options.contactId, name: options.name || '', callName: options.callName || '', avatar: options.avatar || '', lastMessage: options.lastMessage || '', time: options.time || '' });
+                    writeChats(chats);
+                } else {
+                    writeChats(chats);
+                }
+
+                var histories = readChatHistories();
+                if(!Array.isArray(histories[options.chatId])) histories[options.chatId] = [];
+                writeChatHistories(histories);
+            }
+
+            function applyInitialTabFromRoute(){
+                var params = new URLSearchParams(window.location.search || '');
+                var tab = params.get('tab');
+                if(tab === 'contacts'){
+                    var input = document.getElementById('tab-2');
+                    if(input) input.checked = true;
+                } else if(tab === 'moments'){
+                    var input3 = document.getElementById('tab-3');
+                    if(input3) input3.checked = true;
+                } else if(tab === 'me'){
+                    var input4 = document.getElementById('tab-4');
+                    if(input4) input4.checked = true;
+                } else if(tab === 'messages'){
+                    var input1 = document.getElementById('tab-1');
+                    if(input1) input1.checked = true;
+                }
+            }
+
             // wire save to add a contact (basic persistence)
-            if(selfSave){
-                selfSave.addEventListener('click', function(){
+            if(selfSave) selfSave.addEventListener('click', function(){
                     var name = (document.getElementById('contactName') && document.getElementById('contactName').value || '').trim();
                     if(!name){ alert('请填写昵称'); return; }
                     var callName = (document.getElementById('contactCallName') && document.getElementById('contactCallName').value || '').trim();
@@ -672,10 +734,16 @@
                     closeModal(selfModal);
                     document.getElementById('contactName').value=''; document.getElementById('contactCallName').value=''; document.getElementById('contactAvatarUrl').value='';
                 });
-            }
+
+            ensureStaticContact({ contactId:'contact_static_winter', chatId:'chat_static_winter', name:'Winter', lastMessage:'把今天的情绪，放进相册里。', time:'21:12' });
+            ensureStaticContact({ contactId:'contact_static_nako', chatId:'chat_static_nako', name:'Nako', lastMessage:'周末要去喝咖啡吗？☕️', time:'Wed' });
+            ensureStaticContact({ contactId:'contact_static_isla', chatId:'chat_static_isla', name:'Isla' });
+            ensureStaticContact({ contactId:'contact_static_aki', chatId:'chat_static_aki', name:'Aki' });
+            ensureStaticContact({ contactId:'contact_static_alice', chatId:'chat_static_alice', name:'Alice' });
 
             // Me page logic imported from nav-me.js
             // initial render
+            applyInitialTabFromRoute();
             renderContacts();
             renderSavedChats();
         });

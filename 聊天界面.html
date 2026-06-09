@@ -920,7 +920,7 @@
         </div>
 
         <header class="chat-header">
-            <div class="header-left"><a class="back-link" href="wechat.html" aria-label="返回微信主页"><div class="i-back"></div></a></div>
+            <div class="header-left"><a class="back-link" href="wechat.html?tab=contacts" aria-label="返回微信主页"><div class="i-back"></div></a></div>
             <div class="header-center">
                 <div class="chat-title" id="chatTitle">Winter <div class="online-dot"></div></div>
                 <div class="chat-subtitle" id="chatSubtitle">Active now</div>
@@ -1910,8 +1910,12 @@
                 var routeName = route.name || (linked.chat && linked.chat.name) || (linked.contact && linked.contact.name) || "";
                 var routeCallName = route.callName || (linked.chat && linked.chat.callName) || (linked.contact && linked.contact.callName) || "";
                 var routeAvatar = route.avatar || (linked.chat && linked.chat.avatar) || (linked.contact && linked.contact.avatar) || "";
-                var previewTitle = routeName || readText(STORAGE_KEY + "_preview_name", title);
-                var previewSubtitle = routeCallName ? ("联系人 · " + routeCallName) : readText(STORAGE_KEY + "_preview_subtitle", subtitle);
+                var previewTitle = route.chatId
+                    ? (routeName || title)
+                    : (routeName || readText(STORAGE_KEY + "_preview_name", title));
+                var previewSubtitle = route.chatId
+                    ? (routeCallName ? ("联系人 · " + routeCallName) : subtitle)
+                    : (routeCallName ? ("联系人 · " + routeCallName) : readText(STORAGE_KEY + "_preview_subtitle", subtitle));
                 var targetAvatarText = extractAvatarText(previewTitle || title);
                 var selfName = mode === "detail"
                     ? (settings.detail && settings.detail.selfName) || "Miffy"
@@ -1927,8 +1931,12 @@
                 var simpleAvatars = Object.assign({}, legacyAvatars, avatarsRaw.simple || {});
                 var detailAvatars = Object.assign({}, avatarsRaw.detail || {});
                 var activeAvatars = mode === "detail" ? detailAvatars : simpleAvatars;
-                var targetAvatarUrl = routeAvatar || activeAvatars.targetUrl || readText(STORAGE_KEY + "_avatar_target", "");
-                var selfAvatarUrl = activeAvatars.selfUrl || readText(STORAGE_KEY + "_avatar_self", "");
+                var targetAvatarUrl = route.chatId
+                    ? (routeAvatar || activeAvatars.targetUrl || "")
+                    : (routeAvatar || activeAvatars.targetUrl || readText(STORAGE_KEY + "_avatar_target", ""));
+                var selfAvatarUrl = route.chatId
+                    ? (activeAvatars.selfUrl || "")
+                    : (activeAvatars.selfUrl || readText(STORAGE_KEY + "_avatar_self", ""));
 
                 applyBubbleStyle(settings);
 
@@ -2588,6 +2596,20 @@
             // 防止点击跳转时加载到缓存中的旧版本脚本，追加时间戳避免缓存
             (function() {
                 try {
+                    var backLink = document.querySelector('.back-link');
+                    if (backLink) {
+                        backLink.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            var target = 'wechat.html';
+                            if (chatState.contactId) {
+                                target += '?tab=contacts&contactId=' + encodeURIComponent(chatState.contactId);
+                            } else if (chatState.chatId && chatState.chatId !== 'default') {
+                                target += '?tab=messages&chatId=' + encodeURIComponent(chatState.chatId);
+                            }
+                            window.location.href = target;
+                        });
+                    }
+
                     var dl = document.querySelector('.detail-link');
                     if (dl) {
                         dl.addEventListener('click', function(e) {
