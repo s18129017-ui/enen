@@ -58,6 +58,7 @@
         .story-item:active {
             transform: translateY(1px) scale(0.97);
         }
+        html, body { height: 100%; }
         body { background-color: #e2dfdb; font-family: var(--font-family); margin: 0; min-height: 100vh; overflow: hidden; overscroll-behavior: none; }
         .phone-screen {
             width: 100vw;
@@ -66,10 +67,11 @@
             background-color: var(--app-bg);
             background-image: radial-gradient(circle at 0% 0%, #fff 0%, transparent 50%), radial-gradient(circle at 100% 100%, var(--dusty-pink-light) 0%, transparent 60%);
             position: relative;
-            overflow: clip;
+            overflow: hidden;
             border-radius: 0;
             box-shadow: none;
             display: flex; flex-direction: column;
+            min-height: 0;
         }
         .top-left-hit {
             position: absolute;
@@ -90,7 +92,7 @@
         .css-signal span { width: 3px; background: var(--text-dark); border-radius: 2px;}
         .css-signal span:nth-child(1) { height: 4px; } .css-signal span:nth-child(2) { height: 6px; } .css-signal span:nth-child(3) { height: 8px; } .css-signal span:nth-child(4) { height: 10px; }
         input[type="radio"] { display: none; }
-        .page { display: none; flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px); }
+        .page { display: none; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; scrollbar-width: none; padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px); }
         .page::-webkit-scrollbar { display: none; }
         #tab-1:checked ~ .pages #page-1,
         #tab-2:checked ~ .pages #page-2,
@@ -175,7 +177,7 @@
         .icon-group::after { content:''; position:absolute; top: -2px; left: 8px; width: 10px; height: 10px; border: 2px solid #8ba4c7; border-radius: 50%; }
         .c-name-text { font-size: 15px; color: var(--text-dark); }
         .index-letter { background: var(--dusty-pink-light); color: var(--dusty-pink); font-size: 12px; font-weight: bold; padding: 4px max(16px, calc(16px + var(--safe-right))) 4px max(16px, calc(16px + var(--safe-left))); margin-top: 10px;}
-        .alpha-nav { position: fixed; right: max(6px, calc(6px + var(--safe-right))); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: var(--text-gray); z-index: 60;}
+        .alpha-nav { position: fixed; right: max(6px, calc(6px + var(--safe-right))); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: var(--text-gray); z-index: 60; pointer-events: none;}
         .moments-header { height: 220px; background: linear-gradient(180deg, #e4d5dc 0%, var(--app-bg) 100%); position: relative; margin-bottom: 40px;}
         .moments-user { position: absolute; right: 20px; bottom: -20px; display: flex; align-items: center; gap: 15px; }
         .moments-user .name { font-size: 18px; font-weight: bold; color: var(--text-dark); text-shadow: 0 1px 2px rgba(255,255,255,0.5); margin-bottom: 25px;}
@@ -248,7 +250,7 @@
         <input type="radio" name="nav" id="tab-3">
         <input type="radio" name="nav" id="tab-4">
 
-        <div class="pages" style="display:flex; flex:1; flex-direction:column; overflow:hidden;">
+        <div class="pages" style="display:flex; flex:1; flex-direction:column; overflow:hidden; min-height:0;">
             <div id="page-1" class="page">
                 <header class="app-header glass">
                     <div class="header-title">Messages</div>
