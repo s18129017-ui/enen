@@ -1,4 +1,4 @@
-const CACHE_NAME = "pink-phone-v3";
+const CACHE_NAME = "pink-phone-v4";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -67,24 +67,33 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 页面导航：网络优先，离线回退到兜底页面。
+  // 页面导航：缓存优先并后台更新，提升切页秒开感。
   if (isNavigation) {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
-          return response;
-        })
-        .catch(() => {
-          if (requestUrl.pathname.endsWith("/offline.html")) {
-            return caches.match("./offline.html");
-          }
+      caches.match(event.request).then((cached) => {
+        const networkFetch = fetch(event.request)
+          .then((response) => {
+            if (response && response.ok) {
+              const cloned = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+            }
+            return response;
+          })
+          .catch(() => {
+            if (cached) {
+              return cached;
+            }
+            if (requestUrl.pathname.endsWith("/offline.html")) {
+              return caches.match("./offline.html");
+            }
 
-          const offlineUrl = new URL("./offline.html", self.location.origin);
-          offlineUrl.searchParams.set("from", requestUrl.href);
-          return Response.redirect(offlineUrl.href, 302);
-        })
+            const offlineUrl = new URL("./offline.html", self.location.origin);
+            offlineUrl.searchParams.set("from", requestUrl.href);
+            return Response.redirect(offlineUrl.href, 302);
+          });
+
+        return cached || networkFetch;
+      })
     );
     return;
   }

@@ -131,6 +131,18 @@
 
   <audio id="audio"></audio>
 
+  <script>
+    (function() {
+      document.body.classList.add('page-ready');
+      document.addEventListener('click', function(event) {
+        var link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+        if (!link) return;
+        var href = link.getAttribute('href') || '';
+        if (!href || href.charAt(0) === '#') return;
+        document.body.classList.add('page-leaving');
+      }, true);
+    })();
+  </script>
   <script src="music.js"></script>
 </body>
 </html>

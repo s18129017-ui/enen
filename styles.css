@@ -22,6 +22,9 @@ html, body {
     height: 100%;
     background-color: var(--bg-color); /* 背景统一为页面主色 */
 }
+html {
+    -webkit-text-size-adjust: 100%;
+}
 * {
     box-sizing: border-box;
     margin: 0;
@@ -56,6 +59,19 @@ body {
     display: block;
     min-height: 100vh;
     background-color: #e0dcdc; /* 外围大背景 */
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+body.page-ready {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+}
+
+body.page-leaving {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
 }
 
 /* 手机主容器 → 改为全屏容器 */
@@ -244,6 +260,7 @@ body {
     height: 32px;           /* 增加高度，使动画变化更明显 */
     margin-top: 8px;
     padding: 0 2px;
+    contain: layout paint;
 }
 
 /* 波形条基础样式：增加过渡与底部变形原点 */
@@ -497,8 +514,8 @@ body {
 /* 底部毛玻璃 Dock */
 .dock {
     background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-radius: 25px;
     padding: 15px;
     display: flex;
@@ -523,6 +540,15 @@ body {
 .dock-browser { background: linear-gradient(135deg, var(--pink-light), var(--gray-light)); }
 .dock-settings { background: var(--text-main); cursor: pointer; }
 
+
+@media (max-width: 768px) {
+    .top-widget,
+    .music-widget,
+    .polaroid,
+    .dock {
+        box-shadow: 0 3px 10px rgba(220, 163, 173, 0.08);
+    }
+}
 /* ========== API 配置面板样式 ========== */
 .api-modal {
     position: absolute;

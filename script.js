@@ -1,7 +1,11 @@
 // 动态加载 API Modal HTML 并初始化
 (function() {
+    var apiModalReady = false;
+    var apiModalLoading = null;
+
     initStatusBarToggle();
     registerServiceWorker();
+    initPageTransitionState();
 
     function initStatusBarToggle() {
         var phone = document.querySelector(".phone");
@@ -124,18 +128,65 @@
         }
     }
 
-    fetch("api-modal.html")
-        .then(function(response) {
-            return response.text();
-        })
-        .then(function(html) {
-            var container = document.getElementById("apiContainer");
-            container.innerHTML = html;
-            initApiModal();
-        })
-        .catch(function(err) {
-            console.error("Failed to load api-modal.html:", err);
-        });
+    function initPageTransitionState() {
+        document.body.classList.add("page-ready");
+
+        document.addEventListener("click", function(event) {
+            var link = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+            if (!link) {
+                return;
+            }
+
+            var href = link.getAttribute("href") || "";
+            if (!href || href.charAt(0) === "#" || link.target === "_blank" || link.hasAttribute("download")) {
+                return;
+            }
+
+            var url;
+            try {
+                url = new URL(href, window.location.href);
+            } catch (error) {
+                return;
+            }
+
+            if (url.origin !== window.location.origin) {
+                return;
+            }
+
+            document.body.classList.add("page-leaving");
+        }, true);
+    }
+
+    function ensureApiModalLoaded() {
+        if (apiModalReady) {
+            return Promise.resolve();
+        }
+
+        if (apiModalLoading) {
+            return apiModalLoading;
+        }
+
+        apiModalLoading = fetch("api-modal.html")
+            .then(function(response) {
+                return response.text();
+            })
+            .then(function(html) {
+                var container = document.getElementById("apiContainer");
+                if (!container) {
+                    throw new Error("API container not found");
+                }
+                container.innerHTML = html;
+                initApiModal();
+                apiModalReady = true;
+            })
+            .catch(function(err) {
+                apiModalLoading = null;
+                console.error("Failed to load api-modal.html:", err);
+                throw err;
+            });
+
+        return apiModalLoading;
+    }
 
     /**
      * API 预设管理类
@@ -553,5 +604,29 @@
         // 初始化时渲染预设列表
         renderPresetList();
         updateActiveChip();
+    }
+
+    var eagerApiSettingsBtn = document.getElementById("apiSettingsBtn");
+    if (eagerApiSettingsBtn) {
+        eagerApiSettingsBtn.addEventListener("pointerenter", function onPointerEnter() {
+            eagerApiSettingsBtn.removeEventListener("pointerenter", onPointerEnter);
+            ensureApiModalLoaded().catch(function() {});
+        });
+
+        eagerApiSettingsBtn.addEventListener("click", function(event) {
+            if (apiModalReady) {
+                return;
+            }
+
+            event.preventDefault();
+            ensureApiModalLoaded()
+                .then(function() {
+                    var loadedButton = document.getElementById("apiSettingsBtn");
+                    if (loadedButton) {
+                        loadedButton.click();
+                    }
+                })
+                .catch(function() {});
+        }, { capture: true });
     }
 })();
