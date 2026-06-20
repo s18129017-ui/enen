@@ -2618,10 +2618,11 @@
                     if (backLink) {
                         backLink.setAttribute('href', buildMessagesTarget());
                         backLink.addEventListener('click', function(e) {
-                            if (window.history.length > 1) {
-                                e.preventDefault();
-                                window.history.back();
-                            }
+                            e.preventDefault();
+                            document.body.classList.add('page-leaving');
+                            window.setTimeout(function () {
+                                window.location.href = backLink.href;
+                            }, 180);
                         });
                     }
 

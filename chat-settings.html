@@ -1165,6 +1165,13 @@ body {
             var backLink = document.querySelector(".back-link");
             if (backLink) {
                 backLink.setAttribute("href", buildChatDetailHref());
+                backLink.addEventListener("click", function(event) {
+                    event.preventDefault();
+                    document.body.classList.add("page-leaving");
+                    window.setTimeout(function() {
+                        window.location.href = backLink.href;
+                    }, 180);
+                });
             }
 
             bubblePresetInputs.forEach(function(input) {

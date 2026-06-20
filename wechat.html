@@ -754,13 +754,29 @@
     <script src="nav-me.js"></script>
     <script>
         (function () {
+            var LEAVE_DURATION = 180;
+
+            function isModifiedEvent(event) {
+                return !!(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
+            }
+
+            function isInternalNavigableLink(link) {
+                if (!link) return false;
+                var href = link.getAttribute('href') || '';
+                if (!href || href.charAt(0) === '#') return false;
+                if (link.hasAttribute('download') || link.target === '_blank') return false;
+                return !/^(?:[a-z]+:)?\/\//i.test(href) && href.indexOf('javascript:') !== 0;
+            }
+
             document.body.classList.add('page-ready');
             document.addEventListener('click', function (event) {
                 var link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
-                if (!link) return;
-                var href = link.getAttribute('href') || '';
-                if (!href || href.charAt(0) === '#') return;
+                if (!isInternalNavigableLink(link) || isModifiedEvent(event)) return;
+                event.preventDefault();
                 document.body.classList.add('page-leaving');
+                window.setTimeout(function () {
+                    window.location.href = link.href;
+                }, LEAVE_DURATION);
             }, true);
         })();
     </script>
