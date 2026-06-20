@@ -13,6 +13,7 @@
         var STORAGE_KEY = "miffy_status_bar_hidden_v1";
         var TOP_ZONE = 110;
         var lastTapAt = 0;
+        var DEFAULT_HIDDEN = true;
 
         if (!phone || !statusBar) {
             return;
@@ -60,7 +61,9 @@
             }
         }
 
-        setHidden(localStorage.getItem(STORAGE_KEY) === "1");
+        var savedValue = localStorage.getItem(STORAGE_KEY);
+        var initialHidden = savedValue === null ? DEFAULT_HIDDEN : savedValue === "1";
+        setHidden(initialHidden);
 
         phone.addEventListener("dblclick", function(event) {
             toggleByGesture(event.target, event);
