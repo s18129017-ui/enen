@@ -481,9 +481,6 @@
                 var params = new URLSearchParams();
                 if(item && item.id) params.set('chatId', item.id);
                 if(item && item.contactId) params.set('contactId', item.contactId);
-                if(item && item.name) params.set('name', item.name);
-                if(item && item.callName) params.set('callName', item.callName);
-                if(item && item.avatar) params.set('avatar', item.avatar);
                 var query = params.toString();
                 return '聊天界面.html' + (query ? '?' + query : '');
             }
@@ -510,9 +507,6 @@
                 var params = new URLSearchParams();
                 if(chat && chat.id) params.set('chatId', chat.id);
                 if(chat && chat.contactId) params.set('contactId', chat.contactId);
-                if(chat && chat.name) params.set('name', chat.name);
-                if(chat && chat.callName) params.set('callName', chat.callName);
-                if(chat && chat.avatar) params.set('avatar', chat.avatar);
                 return '聊天界面.html?' + params.toString();
             }
             function extractAvatarText(name){

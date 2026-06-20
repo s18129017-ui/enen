@@ -1122,10 +1122,7 @@
                 var params = new URLSearchParams(window.location.search || "");
                 return {
                     chatId: params.get("chatId") || "default",
-                    contactId: params.get("contactId") || "",
-                    name: params.get("name") || "",
-                    callName: params.get("callName") || "",
-                    avatar: params.get("avatar") || ""
+                    contactId: params.get("contactId") || ""
                 };
             }
 
@@ -1907,9 +1904,9 @@
                     ? [settings.detail && settings.detail.targetRelation, settings.detail && settings.detail.targetRegion].filter(Boolean).join(" · ")
                     : "简约模式 · " + ((settings.simple && settings.simple.callName) || "Miffy");
 
-                var routeName = route.name || (linked.chat && linked.chat.name) || (linked.contact && linked.contact.name) || "";
-                var routeCallName = route.callName || (linked.chat && linked.chat.callName) || (linked.contact && linked.contact.callName) || "";
-                var routeAvatar = route.avatar || (linked.chat && linked.chat.avatar) || (linked.contact && linked.contact.avatar) || "";
+                var routeName = (linked.chat && linked.chat.name) || (linked.contact && linked.contact.name) || "";
+                var routeCallName = (linked.chat && linked.chat.callName) || (linked.contact && linked.contact.callName) || "";
+                var routeAvatar = (linked.chat && linked.chat.avatar) || (linked.contact && linked.contact.avatar) || "";
                 var previewTitle = route.chatId
                     ? (routeName || title)
                     : (routeName || readText(STORAGE_KEY + "_preview_name", title));
