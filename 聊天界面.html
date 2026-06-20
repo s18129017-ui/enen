@@ -2590,42 +2590,47 @@
             syncAttachmentPanelHeight();
             window.addEventListener("resize", syncAttachmentPanelHeight);
 
-            // 防止点击跳转时加载到缓存中的旧版本脚本，追加时间戳避免缓存
             (function() {
+                function buildMessagesTarget() {
+                    var target = 'wechat.html?tab=messages';
+                    if (chatState.chatId && chatState.chatId !== 'default') {
+                        target += '&chatId=' + encodeURIComponent(chatState.chatId);
+                    } else if (chatState.contactId) {
+                        target += '&contactId=' + encodeURIComponent(chatState.contactId);
+                    }
+                    return target;
+                }
+
+                function buildDetailTarget() {
+                    var params = new URLSearchParams();
+                    if (chatState.chatId) {
+                        params.set('chatId', chatState.chatId);
+                    }
+                    if (chatState.contactId) {
+                        params.set('contactId', chatState.contactId);
+                    }
+                    var query = params.toString();
+                    return 'chat-settings.html' + (query ? '?' + query : '');
+                }
+
                 try {
                     var backLink = document.querySelector('.back-link');
                     if (backLink) {
+                        backLink.setAttribute('href', buildMessagesTarget());
                         backLink.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            var target = 'wechat.html';
-                            if (chatState.chatId && chatState.chatId !== 'default') {
-                                target += '?tab=messages&chatId=' + encodeURIComponent(chatState.chatId);
-                            } else if (chatState.contactId) {
-                                target += '?tab=messages&contactId=' + encodeURIComponent(chatState.contactId);
+                            if (window.history.length > 1) {
+                                e.preventDefault();
+                                window.history.back();
                             }
-                            window.location.href = target;
                         });
                     }
 
                     var dl = document.querySelector('.detail-link');
                     if (dl) {
-                        dl.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            var href = dl.getAttribute('href') || 'chat-settings.html';
-                            var base = href.split('?')[0];
-                            var params = new URLSearchParams();
-                            if (chatState.chatId) {
-                                params.set('chatId', chatState.chatId);
-                            }
-                            if (chatState.contactId) {
-                                params.set('contactId', chatState.contactId);
-                            }
-                            params.set('_ts', Date.now());
-                            window.location.href = base + '?' + params.toString();
-                        });
+                        dl.setAttribute('href', buildDetailTarget());
                     }
                 } catch (err) {
-                    console.warn('detail-link cache-bust failed', err);
+                    console.warn('navigation link setup failed', err);
                 }
             })();
         })();
