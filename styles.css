@@ -87,7 +87,7 @@ body.page-leaving {
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: calc(10px + var(--safe-top)) max(14px, calc(14px + var(--safe-right))) calc(var(--dock-total-height) + max(10px, var(--safe-bottom))) max(14px, calc(14px + var(--safe-left)));
+    padding: 0 max(14px, calc(14px + var(--safe-right))) calc(var(--dock-total-height) + max(10px, var(--safe-bottom))) max(14px, calc(14px + var(--safe-left)));
 }
 
 
@@ -132,11 +132,11 @@ body.page-leaving {
 }
 
 .phone.status-bar-hidden {
-    padding-top: calc(20px + var(--safe-top));
+    padding-top: 0;
 }
 
 .phone.status-bar-hidden .top-widget {
-    margin-top: 20px;
+    margin-top: calc(12px + var(--safe-top));
 }
 
 /* 顶部个人卡片组件 */
