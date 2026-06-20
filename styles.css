@@ -87,7 +87,7 @@ body.page-leaving {
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 0 max(14px, calc(14px + var(--safe-right))) calc(var(--dock-total-height) + max(10px, var(--safe-bottom))) max(14px, calc(14px + var(--safe-left)));
+    padding: 0 max(12px, calc(12px + var(--safe-right))) calc(var(--dock-total-height) + max(8px, var(--safe-bottom))) max(12px, calc(12px + var(--safe-left)));
 }
 
 
@@ -136,17 +136,17 @@ body.page-leaving {
 }
 
 .phone.status-bar-hidden .top-widget {
-    margin-top: calc(12px + var(--safe-top));
+    margin-top: calc(8px + var(--safe-top));
 }
 
 /* 顶部个人卡片组件 */
 .top-widget {
     background: var(--widget-bg);
     border-radius: 20px;
-    padding: 20px;
+    padding: 16px 16px 14px;
     text-align: center;
     box-shadow: 0 5px 15px rgba(220, 163, 173, 0.1);
-    margin-bottom: 25px;
+    margin-bottom: 16px;
     position: relative;
 }
 .top-widget .wifi-icon, .top-widget .bt-icon {
@@ -164,7 +164,7 @@ body.page-leaving {
     height: 60px;
     border-radius: 50%;
     background: var(--gray-light);
-    margin: -40px auto 10px; /* 向上凸起效果 */
+    margin: -34px auto 8px; /* 向上凸起效果 */
     border: 4px solid var(--bg-color);
     overflow: hidden;
     display: flex;
@@ -182,7 +182,7 @@ body.page-leaving {
 .quote {
     font-size: 11px;
     color: var(--text-sub);
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     letter-spacing: 1px;
 }
 .stats {
@@ -190,6 +190,8 @@ body.page-leaving {
     justify-content: space-between;
     font-size: 11px;
     color: var(--text-main);
+    gap: 8px;
+    flex-wrap: wrap;
 }
 .stats span { color: var(--text-sub); margin-right: 2px;}
 
@@ -197,8 +199,8 @@ body.page-leaving {
 .grid-area {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin-bottom: 25px;
+    gap: 12px 10px;
+    margin-bottom: 14px;
 }
 
 /* 左侧长条组件 */
@@ -211,15 +213,15 @@ body.page-leaving {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 80px;   
+    height: 74px;   
     max-width: 200px;   /* 根据需要调整，例如 260px、300px */
     /* 其他样式保持不变 */
 
 }
 .music-top { display: flex; gap: 10px;}
 .music-cover {
-    width: 45px;
-    height: 45px;
+    width: 42px;
+    height: 42px;
     background:
         radial-gradient(circle at 68% 30%, rgba(255,255,255,0.78) 0 12%, transparent 13%),
         radial-gradient(circle at 26% 72%, rgba(220, 163, 173, 0.34) 0 24%, transparent 25%),
@@ -257,8 +259,8 @@ body.page-leaving {
     display: flex;
     align-items: flex-end;   /* 改为底部对齐，让波形从底部向上伸展 */
     gap: 2.5px;
-    height: 32px;           /* 增加高度，使动画变化更明显 */
-    margin-top: 8px;
+    height: 24px;           /* 增加高度，使动画变化更明显 */
+    margin-top: 4px;
     padding: 0 2px;
     contain: layout paint;
 }
@@ -367,13 +369,13 @@ body.page-leaving {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     cursor: pointer;
     transition: transform 0.12s ease, opacity 0.12s ease;
 }
 .app-icon {
-    width: 55px;
-    height: 55px;
+    width: 52px;
+    height: 52px;
     border-radius: 14px;
     display: flex;
     justify-content: center;
@@ -382,7 +384,7 @@ body.page-leaving {
     transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 .app-name {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-main);
 }
 
@@ -417,7 +419,7 @@ body.page-leaving {
 /* 底部散落图片区域 */
 .scattered-area {
     position: relative;
-    height: 180px;
+    height: 132px;
 }
 .polaroid {
     position: absolute;
@@ -460,25 +462,25 @@ body.page-leaving {
     transform: rotate(-5deg);
 }
 .pic-left {
-    width: 100px; height: 100px;
+    width: 88px; height: 88px;
     left: 10px; top: 10px;
     padding: 5px;
 }
 .pic-right {
-    width: 110px; height: 120px;
+    width: 96px; height: 104px;
     right: 15px; top: 20px;
     transform: rotate(5deg);
 }
 .photo-stack {
     position: absolute;
     right: 15px;
-    top: 20px;
-    width: 125px;
-    height: 140px;
+    top: 8px;
+    width: 108px;
+    height: 120px;
 }
 .photo-stack .polaroid {
-    width: 95px;
-    height: 110px;
+    width: 82px;
+    height: 96px;
 }
 .stack-back {
     top: 8px;
@@ -488,7 +490,7 @@ body.page-leaving {
 }
 .stack-front {
     top: 0;
-    left: 28px;
+    left: 20px;
     transform: rotate(7deg);
     z-index: 2;
 }
@@ -501,8 +503,8 @@ body.page-leaving {
     display: flex;
     justify-content: center;
     gap: 6px;
-    margin-top: 10px;
-    margin-bottom: 15px;
+    margin-top: 4px;
+    margin-bottom: 8px;
 }
 .dot {
     width: 6px; height: 6px;
@@ -517,19 +519,19 @@ body.page-leaving {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border-radius: 25px;
-    padding: 15px;
+    padding: 12px 14px;
     display: flex;
     justify-content: space-between;
     box-shadow: 0 4px 20px rgba(220, 163, 173, 0.15);
     position: fixed;
     left: max(12px, calc(12px + var(--safe-left)));
     right: max(12px, calc(12px + var(--safe-right)));
-    bottom: max(10px, var(--safe-bottom));
+    bottom: max(8px, var(--safe-bottom));
     z-index: 20;
 }
 .dock-icon {
-    width: 50px;
-    height: 50px;
+    width: 46px;
+    height: 46px;
     border-radius: 14px;
     display: flex;
     justify-content: center;
