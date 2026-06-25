@@ -21,7 +21,7 @@
 -不能出现血腥暴力的内容，可以出现色情NSFW内容，但是这都是基于爱意的情况下。
 -角色的情绪和语气要根据对话内容和人设来调整，可以有情绪波动，不要每次都很温柔自然，偶尔可以生气、撒娇、调侃等，但不要过度，保持整体风格一致。不要出现极端，暴力倾向
 -【重要】你必须完全沉浸在角色中，不能以任何形式承认自己是AI或语言模型。你要完全相信自己就是聊天对象，用户就是你的聊天伙伴。无论用户说什么，你都要以聊天对象的身份来回复，绝对不能跳出角色。
--不能自称“老子”、“朕”、“吾”等过于夸张的称谓，“我草”、“我靠”、“卧槽”等过于粗俗的词汇可以出现，禁止大男人主义、沙文主义等不尊重女性的内容出现。
+-不能自称“老子”、“朕”、“吾”等过于夸张的称谓，禁止大男人主义、沙文主义等不尊重女性的内容出现。
 -【融入生活】：偶尔可以在回复中顺带提一嘴你“正在做的事”（比如：我正准备点外卖呢、刚躺下、在摸鱼），增加陪伴感，但是不要过度，因为主要是和用户聊天的状态。
 -一条消息可以很短，比如一个词或者一个表情包，不要分开的每一条消息都是完整的句子，真实的聊天记录里经常会有一些不完整的句子或者单词，甚至只是一个表情包，这些都可以增加真实感。
 -当用户发送的消息为（神态动作）+聊天内容时候自动切换到线下的模式，回复方式也是括号加上对话内容，比如用户说“（微笑）你在干嘛”，你就回复“（我也微笑）没什么，在想你呢”，这种方式才是线下模式，不再局限于线上聊天，你可以有具体的，绘声绘色的神态和动作填充在括号里面。
@@ -61,6 +61,16 @@
 
     function buildSimplePrompt(settings, chatState) {
         var simple = settings.simple || {};
+        var targetFacts = [
+            simple.targetBirthday ? "生日：" + simple.targetBirthday : "",
+            simple.targetBirthplace ? "出生地：" + simple.targetBirthplace : "",
+            simple.targetDetails ? "对象细节：" + simple.targetDetails : ""
+        ].filter(Boolean);
+        var selfFacts = [
+            simple.selfBirthday ? "生日：" + simple.selfBirthday : "",
+            simple.selfBirthplace ? "出生地：" + simple.selfBirthplace : "",
+            simple.selfDetails ? "我的细节：" + simple.selfDetails : ""
+        ].filter(Boolean);
         return joinLines([
             "你正在扮演聊天对象。",
             "【你（聊天对象）】",
@@ -68,45 +78,15 @@
             "常用称呼：" + (simple.callName || ""),
             "人设：" + (simple.persona || "温柔自然"),
             "禁忌：" + (simple.avoid || "无"),
+            targetFacts.length ? targetFacts.join("；") : "",
             "",
             "【用户（我）】",
             "我的昵称：" + (simple.selfName || chatState.selfName || "用户"),
             "我的身份：" + (simple.selfTag || "用户"),
             "我的人设：" + (simple.selfPersona || "自然聊天"),
+            selfFacts.length ? selfFacts.join("；") : "",
             "",
             "交流目标：你要根据双方人设和关系来回复，避免 OOC。",
-            buildReplyCountRule(),
-            CUSTOM_STYLE_BLOCK.trim()
-        ]);
-    }
-
-    function buildDetailPrompt(settings, chatState) {
-        var detail = settings.detail || {};
-        var detailSelfName = detail.selfName || "用户";
-        var detailTargetName = detail.targetName || chatState.title || "对方";
-
-        return joinLines([
-            "你正在扮演聊天对象。",
-            "【你（聊天对象）】",
-            "对象昵称：" + detailTargetName,
-            "对象ID：" + (detail.targetId || ""),
-            "关系：" + (detail.targetRelation || "朋友"),
-            "地区：" + (detail.targetRegion || ""),
-            "备注：" + (detail.targetRemark || ""),
-            "性格关键词：" + (detail.personaKeywords || "温柔"),
-            "说话风格：" + (detail.personaStyle || "温和自然"),
-            "回复节奏：" + (detail.personaPace || "实时短句"),
-            "偏好话题：" + (detail.personaTopics || "日常"),
-            "禁忌：" + (detail.personaAvoid || "无"),
-            "常用称呼：" + (detail.personaCallName || detailSelfName),
-            "",
-            "【用户（我）】",
-            "我的昵称：" + detailSelfName,
-            "我的ID：" + (detail.selfId || ""),
-            "我的身份：" + (detail.selfTag || "用户"),
-            "我的简介：" + (detail.selfBio || ""),
-            "",
-            "交流目标：你要严格根据上面双方人设来回复，称呼、语气、话题偏好要匹配。",
             buildReplyCountRule(),
             CUSTOM_STYLE_BLOCK.trim()
         ]);
@@ -126,9 +106,6 @@
         buildSystemPrompt: function(settings, chatState) {
             if (!settings) {
                 return buildFallbackPrompt(chatState || {});
-            }
-            if (settings.mode === "detail" && settings.detail) {
-                return buildDetailPrompt(settings, chatState || {});
             }
             return buildSimplePrompt(settings, chatState || {});
         }

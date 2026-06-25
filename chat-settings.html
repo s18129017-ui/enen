@@ -595,6 +595,18 @@ body {
                         <label>一句话人设</label>
                         <textarea id="simple-persona">温柔安静，偏爱灰粉色调，喜欢咖啡与摄影，聊天时语气自然柔和。</textarea>
                     </div>
+                    <div class="field">
+                        <label>生日</label>
+                        <input id="simple-target-birthday" placeholder="例如 3月12日 / 2001-03-12" />
+                    </div>
+                    <div class="field">
+                        <label>出生地</label>
+                        <input id="simple-target-birthplace" placeholder="例如 杭州 / 四川成都" />
+                    </div>
+                    <div class="field full">
+                        <label>对象细节补充</label>
+                        <textarea id="simple-target-details" placeholder="比如：怕冷、讨厌香菜、喜欢蓝牙耳机、晚上容易emo"></textarea>
+                    </div>
                     <div class="field full">
                         <label>禁忌 / 避免话题</label>
                         <textarea id="simple-avoid">避免命令式语气，不讨论隐私敏感内容。</textarea>
@@ -616,6 +628,18 @@ body {
                     <div class="field full">
                         <label>我的一句话人设</label>
                         <textarea id="simple-self-persona">喜欢记录日常和拍照，偏爱灰粉色系界面。</textarea>
+                    </div>
+                    <div class="field">
+                        <label>我的生日</label>
+                        <input id="simple-self-birthday" placeholder="例如 8月21日 / 2000-08-21" />
+                    </div>
+                    <div class="field">
+                        <label>我的出生地</label>
+                        <input id="simple-self-birthplace" placeholder="例如 深圳 / 湖南长沙" />
+                    </div>
+                    <div class="field full">
+                        <label>我的细节补充</label>
+                        <textarea id="simple-self-details" placeholder="比如：睡前爱聊天、爱喝冰美式、讨厌太官腔的回复"></textarea>
                     </div>
                 </div>
             </section>
@@ -740,10 +764,16 @@ body {
                     targetName: document.getElementById("simple-target-name"),
                     callName: document.getElementById("simple-call-name"),
                     persona: document.getElementById("simple-persona"),
+                    targetBirthday: document.getElementById("simple-target-birthday"),
+                    targetBirthplace: document.getElementById("simple-target-birthplace"),
+                    targetDetails: document.getElementById("simple-target-details"),
                     avoid: document.getElementById("simple-avoid"),
                     selfName: document.getElementById("simple-self-name"),
                     selfTag: document.getElementById("simple-self-tag"),
-                    selfPersona: document.getElementById("simple-self-persona")
+                    selfPersona: document.getElementById("simple-self-persona"),
+                    selfBirthday: document.getElementById("simple-self-birthday"),
+                    selfBirthplace: document.getElementById("simple-self-birthplace"),
+                    selfDetails: document.getElementById("simple-self-details")
                 },
                 avatars: {
                     simpleTargetUrl: document.getElementById("simple-target-avatar-url"),
@@ -768,10 +798,16 @@ body {
                     targetName: "Winter",
                     callName: "Miffy",
                     persona: "温柔安静，偏爱灰粉色调，喜欢咖啡与摄影，聊天时语气自然柔和。",
+                    targetBirthday: "",
+                    targetBirthplace: "",
+                    targetDetails: "",
                     avoid: "避免命令式语气，不讨论隐私敏感内容。",
                     selfName: "Miffy",
                     selfTag: "用户",
-                    selfPersona: "喜欢记录日常和拍照，偏爱灰粉色系界面。"
+                    selfPersona: "喜欢记录日常和拍照，偏爱灰粉色系界面。",
+                    selfBirthday: "",
+                    selfBirthplace: "",
+                    selfDetails: ""
                 },
                 avatars: {
                     simple: {
@@ -1083,10 +1119,16 @@ body {
                 fields.simple.targetName.value = simple.targetName;
                 fields.simple.callName.value = simple.callName;
                 fields.simple.persona.value = simple.persona;
+                fields.simple.targetBirthday.value = simple.targetBirthday || "";
+                fields.simple.targetBirthplace.value = simple.targetBirthplace || "";
+                fields.simple.targetDetails.value = simple.targetDetails || "";
                 fields.simple.avoid.value = simple.avoid;
                 fields.simple.selfName.value = simple.selfName;
                 fields.simple.selfTag.value = simple.selfTag;
                 fields.simple.selfPersona.value = simple.selfPersona;
+                fields.simple.selfBirthday.value = simple.selfBirthday || "";
+                fields.simple.selfBirthplace.value = simple.selfBirthplace || "";
+                fields.simple.selfDetails.value = simple.selfDetails || "";
 
                 var avatarsRaw = data.avatars || {};
                 var legacyAvatars = (avatarsRaw.targetUrl || avatarsRaw.selfUrl)
@@ -1119,10 +1161,16 @@ body {
                         targetName: fields.simple.targetName.value.trim(),
                         callName: fields.simple.callName.value.trim(),
                         persona: fields.simple.persona.value.trim(),
+                        targetBirthday: fields.simple.targetBirthday.value.trim(),
+                        targetBirthplace: fields.simple.targetBirthplace.value.trim(),
+                        targetDetails: fields.simple.targetDetails.value.trim(),
                         avoid: fields.simple.avoid.value.trim(),
                         selfName: fields.simple.selfName.value.trim(),
                         selfTag: fields.simple.selfTag.value.trim(),
-                        selfPersona: fields.simple.selfPersona.value.trim()
+                        selfPersona: fields.simple.selfPersona.value.trim(),
+                        selfBirthday: fields.simple.selfBirthday.value.trim(),
+                        selfBirthplace: fields.simple.selfBirthplace.value.trim(),
+                        selfDetails: fields.simple.selfDetails.value.trim()
                     },
                     avatars: {
                         simple: {

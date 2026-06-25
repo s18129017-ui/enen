@@ -1284,25 +1284,10 @@
                     return;
                 }
 
-                var styleData = settings && settings.bubbleStyle ? settings.bubbleStyle : {};
                 var legacyMode = settings && settings.mode === "detail";
                 var preset = normalizeBubblePreset(styleData.preset);
                 var customCss = typeof styleData.customCss === "string" ? styleData.customCss : "";
 
-                chatBody.classList.remove("bubble-theme-bw", "bubble-theme-pink", "bubble-theme-wechat");
-                chatBody.classList.remove("bubble-mode-soft", "bubble-mode-compact", "bubble-mode-light", "bubble-mode-dark");
-
-                if (legacyMode && settings.detail) {
-                    if (settings.detail.bubbleIncoming === "圆角柔和") {
-                        chatBody.classList.add("bubble-mode-soft");
-                    } else if (settings.detail.bubbleIncoming === "紧凑简洁") {
-                        chatBody.classList.add("bubble-mode-compact");
-                    }
-
-                    if (settings.detail.bubbleOutgoing === "淡粉高亮") {
-                        chatBody.classList.add("bubble-mode-light");
-                    } else if (settings.detail.bubbleOutgoing === "极简深灰") {
-                        chatBody.classList.add("bubble-mode-dark");
                     }
                 } else {
                     chatBody.classList.add("bubble-theme-" + preset);
@@ -1894,19 +1879,11 @@
                 var route = parseChatRoute();
                 var linked = findChatMeta(route);
                 var settings = getScopedChatSettings(route.chatId || chatState.chatId) || {};
-
-                var mode = settings.mode === "detail" ? "detail" : "simple";
-                var title = mode === "detail"
-                    ? (settings.detail && settings.detail.targetName) || "Winter"
-                    : (settings.simple && settings.simple.targetName) || "Winter";
-
-                var subtitle = mode === "detail"
-                    ? [settings.detail && settings.detail.targetRelation, settings.detail && settings.detail.targetRegion].filter(Boolean).join(" · ")
-                    : "简约模式 · " + ((settings.simple && settings.simple.callName) || "Miffy");
-
+                var simple = settings.simple || {};
+                var title = simple.targetName || "Winter";
+                var subtitle = "简约模式 · " + (simple.callName || "Miffy");
+                var selfName = simple.selfName || "Miffy";
                 var routeName = (linked.chat && linked.chat.name) || (linked.contact && linked.contact.name) || "";
-                var routeCallName = (linked.chat && linked.chat.callName) || (linked.contact && linked.contact.callName) || "";
-                var routeAvatar = (linked.chat && linked.chat.avatar) || (linked.contact && linked.contact.avatar) || "";
                 var previewTitle = route.chatId
                     ? (routeName || title)
                     : (routeName || readText(STORAGE_KEY + "_preview_name", title));
