@@ -13,6 +13,7 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
     --dock-total-height: 110px;
+    --app-height: 100vh;
 }
 
 /* 全局重置：让页面铺满视口，无滚动条干扰 */
@@ -58,7 +59,9 @@ a:active,
 body {
     display: block;
     min-height: 100vh;
+    min-height: var(--app-height);
     background-color: #e0dcdc; /* 外围大背景 */
+    overflow: hidden;
     opacity: 0;
     transform: translate3d(0, 10px, 0);
     transition: opacity 0.22s ease, transform 0.22s ease;
@@ -77,8 +80,10 @@ body.page-leaving {
 /* 手机主容器 → 改为全屏容器 */
 .phone {
     width: 100vw;
+    height: var(--app-height);
     height: 100svh;
     height: 100dvh;
+    min-height: var(--app-height);
     background-color: var(--bg-color);
     /* 移除圆角，全屏无圆角 */
     border-radius: 0;
@@ -87,6 +92,8 @@ body.page-leaving {
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
     padding: 0 max(12px, calc(12px + var(--safe-right))) calc(var(--dock-total-height) + max(8px, var(--safe-bottom))) max(12px, calc(12px + var(--safe-left)));
 }
 

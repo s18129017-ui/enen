@@ -6,6 +6,7 @@
     initStatusBarToggle();
     registerServiceWorker();
     initPageTransitionState();
+    initViewportRecovery();
 
     function initStatusBarToggle() {
         var phone = document.querySelector(".phone");
@@ -158,6 +159,50 @@
 
             document.body.classList.add("page-leaving");
         }, true);
+    }
+
+    function initViewportRecovery() {
+        var phone = document.querySelector(".phone");
+
+        function syncViewportHeight() {
+            var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+            if (viewportHeight > 0) {
+                document.documentElement.style.setProperty("--app-height", viewportHeight + "px");
+            }
+        }
+
+        function restoreViewportState() {
+            syncViewportHeight();
+
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+
+            if (phone) {
+                phone.scrollTop = 0;
+            }
+
+            window.requestAnimationFrame(function() {
+                window.scrollTo(0, 0);
+                if (phone) {
+                    phone.scrollTop = 0;
+                }
+            });
+        }
+
+        syncViewportHeight();
+        restoreViewportState();
+
+        window.addEventListener("pageshow", restoreViewportState);
+        window.addEventListener("focus", restoreViewportState);
+        window.addEventListener("resize", syncViewportHeight);
+        window.addEventListener("orientationchange", restoreViewportState);
+
+        document.addEventListener("visibilitychange", function() {
+            if (!document.hidden) {
+                restoreViewportState();
+            }
+        });
     }
 
     function ensureApiModalLoaded() {
