@@ -1021,6 +1021,7 @@
                 running: false,
                 lastError: ""
             };
+            var replyRoundSeed = 0;
 
             var chatState = {
                 chatId: "default",
@@ -1085,37 +1086,52 @@
                 writeMemoryBuckets(MEMORY_DECADES_KEY, buckets);
             }
 
+            function createReplyRoundId() {
+                replyRoundSeed += 1;
+                return "reply-" + Date.now() + "-" + replyRoundSeed;
+            }
+
             function buildConversationRounds(history) {
                 var safeHistory = Array.isArray(history) ? history.filter(function(item) {
                     return item && (item.role === "user" || item.role === "assistant") && typeof item.content === "string" && item.content.trim();
                 }) : [];
                 var rounds = [];
-                var current = null;
+                var pendingUsers = [];
+                var pendingStartedAt = "";
+                var currentRound = null;
 
                 safeHistory.forEach(function(item) {
                     if (item.role === "user") {
-                        if (current && current.userMessages.length && current.assistantMessages.length) {
-                            rounds.push(current);
-                            current = null;
+                        if (!pendingStartedAt) {
+                            pendingStartedAt = item.time || formatMessageTime();
                         }
-                        if (!current) {
-                            current = {
-                                userMessages: [],
-                                assistantMessages: [],
-                                startedAt: item.time || formatMessageTime()
-                            };
-                        }
-                        current.userMessages.push(item);
+                        pendingUsers.push(item);
                         return;
                     }
-                    if (!current || !current.userMessages.length) {
+
+                    if (!pendingUsers.length) {
                         return;
                     }
-                    current.assistantMessages.push(item);
+
+                    var replyRoundId = item.replyRoundId || "";
+                    if (!currentRound || currentRound.replyRoundId !== replyRoundId) {
+                        if (currentRound && currentRound.userMessages.length && currentRound.assistantMessages.length) {
+                            rounds.push(currentRound);
+                        }
+                        currentRound = {
+                            replyRoundId: replyRoundId,
+                            userMessages: pendingUsers.slice(),
+                            assistantMessages: [],
+                            startedAt: pendingStartedAt || item.time || formatMessageTime()
+                        };
+                        pendingUsers = [];
+                        pendingStartedAt = "";
+                    }
+                    currentRound.assistantMessages.push(item);
                 });
 
-                if (current && current.userMessages.length && current.assistantMessages.length) {
-                    rounds.push(current);
+                if (currentRound && currentRound.userMessages.length && currentRound.assistantMessages.length) {
+                    rounds.push(currentRound);
                 }
 
                 return rounds.map(function(round, index) {
@@ -1123,9 +1139,10 @@
                     var assistantText = round.assistantMessages.map(function(item) { return item.content; }).join("\n");
                     return {
                         roundNumber: index + 1,
+                        replyRoundId: round.replyRoundId,
                         userText: userText,
                         assistantText: assistantText,
-                        signature: [index + 1, userText, assistantText].join("||"),
+                        signature: [round.replyRoundId || index + 1, userText, assistantText].join("||"),
                         happenedAt: round.assistantMessages[round.assistantMessages.length - 1].time || round.startedAt || formatMessageTime()
                     };
                 });
@@ -1309,8 +1326,14 @@
                 var missingRounds = roundsFromHistory.filter(function(round) {
                     return !roundMap[round.signature];
                 });
+                var needDecadeRefresh = false;
 
-                if (!missingRounds.length) {
+                if (storedRounds.length >= 10) {
+                    var expectedGroupCount = Math.floor(storedRounds.length / 10);
+                    needDecadeRefresh = storedDecades.length < expectedGroupCount;
+                }
+
+                if (!missingRounds.length && !needDecadeRefresh) {
                     if (memoryModal && memoryModal.classList.contains("show")) {
                         renderMemorySummary();
                     }
@@ -1335,7 +1358,8 @@
                     });
                 }, Promise.resolve(storedRounds.slice())).then(function(finalRounds) {
                     var decadeMap = {};
-                    storedDecades.forEach(function(item) {
+                    var currentStoredDecades = readChatMemoryDecades();
+                    currentStoredDecades.forEach(function(item) {
                         if (item && item.groupIndex) {
                             decadeMap[item.groupIndex] = item;
                         }
@@ -1357,7 +1381,7 @@
                                 return currentDecades;
                             });
                         });
-                    }, Promise.resolve(storedDecades.slice())).then(function(finalDecades) {
+                    }, Promise.resolve(currentStoredDecades.slice())).then(function(finalDecades) {
                         return { rounds: finalRounds, decades: finalDecades };
                     });
                 }).then(function(result) {
@@ -1424,7 +1448,7 @@
                 var roundDetailHtml = latestRound
                     ? '' +
                         '<section class="memory-section">' +
-                            '<div class="memory-section-title">第 ' + latestRound.roundNumber + ' 轮发生了什么</div>' +
+                            '<div class="memory-section-title">最新一轮：第 ' + latestRound.roundNumber + ' 轮</div>' +
                             '<div class="memory-summary">' + escapeHtml(latestRound.happened) + '</div>' +
                         '</section>' +
                         '<section class="memory-section">' +
@@ -1442,7 +1466,22 @@
                     : '<section class="memory-section"><div class="memory-section-title">本轮记忆</div><div class="memory-empty">完成一整轮对话后，这里会保留每轮总结。</div></section>';
 
                 var historyHtml = rounds.length
-                    ? '<section class="memory-section"><div class="memory-section-title">每轮记忆记录</div><div class="memory-list">' + rounds.slice().reverse().map(function(item) { return '<div class="memory-bullet">第 ' + item.roundNumber + ' 轮：' + escapeHtml(item.happened) + '</div>'; }).join("") + '</div></section>'
+                    ? rounds.slice().reverse().map(function(item) {
+                        var eventsHtml = item.majorEvents.map(function(entry) { return '<div class="memory-bullet">' + escapeHtml(entry) + '</div>'; }).join("");
+                        var itemsHtml = item.importantItems.map(function(entry) { return '<div class="memory-bullet">' + escapeHtml(entry) + '</div>'; }).join("");
+                        var progressHtml = item.relationProgress.map(function(entry) { return '<div class="memory-bullet">' + escapeHtml(entry) + '</div>'; }).join("");
+                        return '' +
+                            '<section class="memory-section">' +
+                                '<div class="memory-section-title">第 ' + item.roundNumber + ' 轮记忆</div>' +
+                                '<div class="memory-summary">' + escapeHtml(item.happened) + '</div>' +
+                                '<div class="memory-section-title">重大事件</div>' +
+                                '<div class="memory-list">' + eventsHtml + '</div>' +
+                                '<div class="memory-section-title">重要物品</div>' +
+                                '<div class="memory-list">' + itemsHtml + '</div>' +
+                                '<div class="memory-section-title">关系/情绪变化</div>' +
+                                '<div class="memory-list">' + progressHtml + '</div>' +
+                            '</section>';
+                    }).join("")
                     : '';
 
                 var statusHtml = memorySummaryState.lastError
@@ -2345,14 +2384,17 @@
                             replies = ["我刚刚有点走神啦，可以再说一次吗？"];
                         }
 
+                        var replyRoundId = createReplyRoundId();
+
                         replies.forEach(function(reply) {
                             addMessageRow("assistant", reply);
-                            chatState.history.push({ role: "assistant", content: reply, time: formatMessageTime() });
+                            chatState.history.push({ role: "assistant", content: reply, time: formatMessageTime(), replyRoundId: replyRoundId });
                         });
 
                         chatState.history = trimHistory(chatState.history);
                         chatState.pendingUserCount = 0;
                         saveHistory();
+                        scheduleMemorySummary({ silent: true });
                     })
                     .catch(function(error) {
                         if (activeReplyRequest !== requestState) {
