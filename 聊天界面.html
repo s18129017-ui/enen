@@ -30,12 +30,8 @@
         a,
         [role="button"],
         .send-btn,
-        .floating-orb,
         .bubble-action-btn,
         .edit-btn,
-        .fab-chip,
-        .fab-save,
-        .fab-close,
         .back-link,
         .detail-link {
             -webkit-tap-highlight-color: transparent;
@@ -46,12 +42,8 @@
         a,
         [role="button"],
         .send-btn,
-        .floating-orb,
         .bubble-action-btn,
         .edit-btn,
-        .fab-chip,
-        .fab-save,
-        .fab-close,
         .back-link,
         .detail-link {
             transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
@@ -60,12 +52,8 @@
         a:active,
         [role="button"]:active,
         .send-btn:active,
-        .floating-orb:active,
         .bubble-action-btn:active,
         .edit-btn:active,
-        .fab-chip:active,
-        .fab-save:active,
-        .fab-close:active,
         .back-link:active,
         .detail-link:active {
             transform: translateY(1px) scale(0.97);
@@ -103,7 +91,7 @@
             border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 50;
         }
         .header-left, .header-right { width: 40px; display: flex; align-items: center; }
-        .header-right { justify-content: flex-end; }
+        .header-right { width: auto; justify-content: flex-end; gap: 10px; }
         .header-center { display: flex; flex-direction: column; align-items: center; gap: 2px; }
         .chat-title { font-size: 16px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 6px; }
         .online-dot { width: 6px; height: 6px; background-color: #a8d5a2; border-radius: 50%; }
@@ -112,6 +100,24 @@
         .i-back { width: 10px; height: 10px; border-left: 2px solid var(--text-dark); border-bottom: 2px solid var(--text-dark); transform: rotate(45deg); cursor: pointer; }
         .back-link { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; text-decoration: none; }
         .detail-link { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; text-decoration: none; }
+        .memory-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--dusty-pink-dark);
+            background: rgba(212, 165, 180, 0.16);
+            border: 1px solid rgba(212, 165, 180, 0.25);
+        }
+        .memory-link:active {
+            background: rgba(212, 165, 180, 0.24);
+        }
         .i-more { width: 4px; height: 4px; background: var(--text-dark); border-radius: 50%; box-shadow: -7px 0 0 var(--text-dark), 7px 0 0 var(--text-dark); cursor: pointer;}
 
         /* 聊天主体 */
@@ -571,117 +577,54 @@
             opacity: 1;
         }
 
-        .floating-orb {
-            position: fixed;
-            right: 16px;
-            bottom: 110px;
-            width: 52px;
-            height: 52px;
-            border: none;
-            border-radius: 50%;
-            background:
-                radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.2) 28%, transparent 58%),
-                linear-gradient(145deg, #e2b7c5 0%, #d4a5b4 55%, #be8e9f 100%);
-            box-shadow:
-                0 12px 22px rgba(192, 141, 158, 0.35),
-                inset 0 1px 1px rgba(255, 255, 255, 0.75),
-                inset 0 -6px 10px rgba(130, 86, 101, 0.2);
-            z-index: 80;
-            cursor: pointer;
-            touch-action: none;
-            user-select: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            animation: orb-float 2.6s ease-in-out infinite;
-        }
-        .floating-orb.dragging {
-            cursor: grabbing;
-            animation: none;
-            transition: none;
-        }
-
-        .floating-orb::before {
-            content: "";
-            position: absolute;
-            inset: 8px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.45);
-        }
-        .floating-orb::after {
-            content: "⚙";
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255, 255, 255, 0.96);
-            font-size: 19px;
-            font-weight: 700;
-            text-shadow: 0 1px 2px rgba(130, 86, 101, 0.25);
-        }
-
-        .floating-orb:active {
-            transform: scale(0.95);
-            box-shadow:
-                0 8px 14px rgba(192, 141, 158, 0.3),
-                inset 0 1px 1px rgba(255, 255, 255, 0.65),
-                inset 0 -5px 8px rgba(130, 86, 101, 0.2);
-        }
-
-        @keyframes orb-float {
-            0%, 100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-4px);
-            }
-        }
-
         /* 纯 CSS 向上箭头 */
         .i-arrow-up { position: relative; width: 14px; height: 14px; display: flex; justify-content: center; }
         .i-arrow-up::before { content: ''; position: absolute; top: 2px; width: 7px; height: 7px; border-top: 2.5px solid #fff; border-left: 2.5px solid #fff; transform: rotate(45deg); border-radius: 1px; }
         .i-arrow-up::after { content: ''; position: absolute; top: 3px; width: 2.5px; height: 10px; background: #fff; border-radius: 2px; }
 
-        .fab-modal {
+        .memory-modal {
             position: fixed;
             inset: 0;
-            background: rgba(26, 22, 23, 0.35);
+            background: rgba(26, 22, 23, 0.38);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease;
-            z-index: 180;
+            z-index: 215;
         }
-        .fab-modal.show {
+        .memory-modal.show {
             opacity: 1;
             pointer-events: auto;
         }
-        .fab-panel {
-            width: min(92vw, 420px);
-            min-height: 300px;
+        .memory-panel {
+            width: min(92vw, 430px);
+            max-height: min(78vh, 620px);
+            overflow: hidden;
             border-radius: 24px;
-            background: linear-gradient(155deg, rgba(255,255,255,0.95), rgba(251,243,245,0.96));
-            border: 1px solid rgba(212, 165, 180, 0.35);
-            box-shadow: 0 20px 40px rgba(58, 54, 55, 0.18);
+            background: linear-gradient(155deg, rgba(255,255,255,0.97), rgba(251,243,245,0.98));
+            border: 1px solid rgba(212, 165, 180, 0.32);
+            box-shadow: 0 22px 42px rgba(58, 54, 55, 0.2);
             padding: 18px;
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
-        .fab-head {
+        .memory-head {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            gap: 12px;
         }
-        .fab-title {
-            font-size: 18px;
+        .memory-title {
+            font-size: 17px;
             font-weight: 800;
             color: var(--text-dark);
         }
-        .fab-close {
+        .memory-close {
             width: 30px;
             height: 30px;
             border-radius: 50%;
@@ -692,75 +635,73 @@
             line-height: 1;
             cursor: pointer;
         }
-        .fab-desc {
-            color: var(--text-gray);
+        .memory-desc {
             font-size: 12px;
+            color: var(--text-gray);
             line-height: 1.5;
         }
-        .fab-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        .fab-field {
+        .memory-content {
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 10px;
+            padding-right: 4px;
         }
-        .fab-field label {
+        .memory-section {
+            background: rgba(255,255,255,0.75);
+            border: 1px solid rgba(212, 165, 180, 0.18);
+            border-radius: 18px;
+            padding: 12px 14px;
+        }
+        .memory-section-title {
             font-size: 12px;
+            font-weight: 800;
+            color: var(--dusty-pink-dark);
+            margin-bottom: 8px;
+        }
+        .memory-summary,
+        .memory-empty,
+        .memory-bullet {
+            font-size: 13px;
+            line-height: 1.65;
+            color: var(--text-dark);
+        }
+        .memory-empty {
             color: var(--text-gray);
         }
-        .fab-field input,
-        .fab-field select {
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 9px 10px;
-            background: #fff;
-            color: var(--text-dark);
-            font-size: 13px;
-        }
-        .fab-field input:focus,
-        .fab-field select:focus {
-            outline: none;
-            border-color: rgba(212, 165, 180, 0.6);
-            box-shadow: 0 0 0 3px rgba(212, 165, 180, 0.14);
-        }
-        .fab-quick {
+        .memory-list {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 8px;
         }
-        .fab-chip {
-            border: 1px solid rgba(212, 165, 180, 0.35);
-            background: #fff;
-            color: var(--dusty-pink-dark);
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 6px 10px;
-            cursor: pointer;
+        .memory-bullet {
+            position: relative;
+            padding-left: 14px;
         }
-        .fab-chip.active {
-            background: var(--dusty-pink-soft);
-            color: var(--text-dark);
+        .memory-bullet::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 9px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--dusty-pink);
         }
-        .fab-footer {
-            margin-top: auto;
+        .memory-footer {
             display: flex;
             justify-content: flex-end;
         }
-        .fab-save {
+        .memory-refresh {
             border: 1px solid rgba(212, 165, 180, 0.35);
             border-radius: 999px;
-            background: var(--dusty-pink-soft);
-            color: var(--dusty-pink-dark);
+            padding: 8px 14px;
             font-size: 12px;
             font-weight: 700;
-            padding: 8px 14px;
             cursor: pointer;
+            background: var(--dusty-pink-soft);
+            color: var(--dusty-pink-dark);
         }
-
         .bubble.editable-bubble {
             cursor: pointer;
             transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
@@ -925,7 +866,10 @@
                 <div class="chat-title" id="chatTitle">Winter <div class="online-dot"></div></div>
                 <div class="chat-subtitle" id="chatSubtitle">Active now</div>
             </div>
-            <div class="header-right"><a class="detail-link" href="chat-settings.html" aria-label="聊天设置"><div class="i-more"></div></a></div>
+            <div class="header-right">
+                <button class="memory-link" id="memoryLink" type="button" aria-label="查看总结记忆">记忆</button>
+                <a class="detail-link" href="chat-settings.html" aria-label="聊天设置"><div class="i-more"></div></a>
+            </div>
         </header>
 
         <main class="chat-body">
@@ -984,47 +928,6 @@
                 <button class="attachment-item" type="button" data-tool-name="个人名片"><div class="attachment-icon"><div class="attachment-glyph glyph-card"></div></div><div class="attachment-label">个人名片</div></button>
                 <button class="attachment-item" type="button" data-tool-name="文件"><div class="attachment-icon"><div class="attachment-glyph glyph-file"></div></div><div class="attachment-label">文件</div></button>
                 <button class="attachment-item" type="button" data-tool-name="音乐"><div class="attachment-icon"><div class="attachment-glyph glyph-music"></div></div><div class="attachment-label">音乐</div></button>
-            </div>
-        </div>
-
-    </div>
-
-    <button class="floating-orb" id="floatingOrb" type="button" aria-label="悬浮球"></button>
-
-    <div class="fab-modal" id="fabModal" aria-hidden="true">
-        <div class="fab-panel" role="dialog" aria-modal="true" aria-labelledby="fabTitle">
-            <div class="fab-head">
-                <div class="fab-title" id="fabTitle">悬浮设置</div>
-                <button class="fab-close" id="fabClose" type="button" aria-label="关闭">×</button>
-            </div>
-            <div class="fab-desc">这里先放回复条数设置，后续功能可以继续往这个面板里加。</div>
-
-            <div class="fab-quick" aria-label="快捷回复条数">
-                <button class="fab-chip" type="button" data-range="1-3">1-3 条</button>
-                <button class="fab-chip" type="button" data-range="2-6">2-6 条</button>
-                <button class="fab-chip" type="button" data-range="4-8">4-8 条</button>
-            </div>
-
-            <div class="fab-row">
-    <div class="fab-field">
-        <label for="replyMin">最少回复条数</label>
-        <select id="replyMin"></select>
-    </div>
-    <div class="fab-field">
-        <label for="replyMax">最多回复条数</label>
-        <select id="replyMax"></select>
-    </div>
-    <div class="fab-field">
-        <label for="retainCount">保留聊天记录条数</label>
-        <input type="number" id="retainCount" placeholder="填写数字，例如 50">
-    </div>
-</div>
-            
-          
-
-            <div class="fab-footer">
-                <button class="fab-save" id="fabSave" type="button">保存设置</button>
-            </div>
         </div>
     </div>
 
@@ -1041,6 +944,20 @@
                     <button class="edit-btn" id="editCancelBtn" type="button">取消</button>
                     <button class="edit-btn primary" id="editSaveBtn" type="button">保存</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="memory-modal" id="memoryModal" aria-hidden="true">
+        <div class="memory-panel" role="dialog" aria-modal="true" aria-labelledby="memoryTitle">
+            <div class="memory-head">
+                <div class="memory-title" id="memoryTitle">总结记忆</div>
+                <button class="memory-close" id="memoryClose" type="button" aria-label="关闭">×</button>
+            </div>
+            <div class="memory-desc">根据当前会话聊天记录自动整理，方便你快速回看关系、话题和最近状态。</div>
+            <div class="memory-content" id="memoryContent"></div>
+            <div class="memory-footer">
+                <button class="memory-refresh" id="memoryRefresh" type="button">刷新总结</button>
             </div>
         </div>
     </div>
@@ -1062,7 +979,6 @@
             var CHATS_KEY = "miffy_chats_v1";
             var CONTACTS_KEY = "miffy_contacts_v1";
             var CHAT_HISTORY_MAX = 30;
-            var FAB_POSITION_KEY = "miffy_fab_position_v1";
             var REPLY_COUNT_KEY = "miffy_reply_count_v1";
             var RETAIN_COUNT_KEY = "miffy_chat_retain_count_v1";
             var titleEl = document.getElementById("chatTitle");
@@ -1082,23 +998,27 @@
             var attachmentItems = Array.prototype.slice.call(document.querySelectorAll(".attachment-item"));
             var chatInput = document.getElementById("chatInput");
             var toast = document.getElementById("chatToast");
-            var floatingOrb = document.getElementById("floatingOrb");
-            var fabModal = document.getElementById("fabModal");
-            var fabClose = document.getElementById("fabClose");
-            var fabSave = document.getElementById("fabSave");
             var editModal = document.getElementById("editModal");
             var editTextarea = document.getElementById("editTextarea");
             var editUndoBtn = document.getElementById("editUndoBtn");
             var editCancelBtn = document.getElementById("editCancelBtn");
             var editSaveBtn = document.getElementById("editSaveBtn");
+            var memoryLink = document.getElementById("memoryLink");
+            var memoryModal = document.getElementById("memoryModal");
+            var memoryContent = document.getElementById("memoryContent");
+            var memoryClose = document.getElementById("memoryClose");
+            var memoryRefresh = document.getElementById("memoryRefresh");
             var bubbleActionMenu = document.getElementById("bubbleActionMenu");
             var bubbleEditAction = document.getElementById("bubbleEditAction");
             var bubbleUndoAction = document.getElementById("bubbleUndoAction");
-            var replyMinSelect = document.getElementById("replyMin");
-            var replyMaxSelect = document.getElementById("replyMax");
-            var retainCountInput = document.getElementById("retainCount");
-            var rangeChips = Array.prototype.slice.call(document.querySelectorAll(".fab-chip"));
             var messageIdSeed = 0;
+            var lastMemoryTrigger = null;
+            var lastEditTrigger = null;
+            var memorySummaryState = {
+                timer: null,
+                text: "",
+                updatedAt: 0
+            };
 
             var chatState = {
                 chatId: "default",
@@ -1117,6 +1037,377 @@
                 actionBubble: null
             };
             var activeReplyRequest = null;
+
+            function truncateText(text, limit) {
+                var value = String(text || "").trim();
+                if (!value) {
+                    return "";
+                }
+                if (value.length <= limit) {
+                    return value;
+                }
+                return value.slice(0, Math.max(0, limit - 1)).trim() + "…";
+            }
+
+            function uniquePush(list, value) {
+                if (!value) {
+                    return;
+                }
+                if (list.indexOf(value) === -1) {
+                    list.push(value);
+                }
+            }
+
+            function extractKeywordsFromHistory(history) {
+                var text = history.map(function(item) {
+                    return item && item.content ? item.content : "";
+                }).join(" ");
+                var matches = text.match(/[\u4e00-\u9fa5A-Za-z0-9]{2,12}/g) || [];
+                var ignoreMap = {
+                    "哈哈": true,
+                    "就是": true,
+                    "你们": true,
+                    "我们": true,
+                    "然后": true,
+                    "现在": true,
+                    "真的": true,
+                    "可以": true,
+                    "一下": true,
+                    "一下子": true,
+                    "时候": true,
+                    "这个": true,
+                    "那个": true,
+                    "因为": true,
+                    "所以": true,
+                    "今天": true,
+                    "明天": true,
+                    "晚上": true,
+                    "早上": true,
+                    "中午": true,
+                    "自己": true,
+                    "已经": true,
+                    "感觉": true,
+                    "一个": true,
+                    "没有": true,
+                    "还是": true,
+                    "什么": true,
+                    "怎么": true,
+                    "然后呢": true,
+                    "你在": true,
+                    "我在": true
+                };
+                var counts = {};
+                matches.forEach(function(word) {
+                    var normalized = String(word || "").trim();
+                    if (!normalized || ignoreMap[normalized]) {
+                        return;
+                    }
+                    if (/^\d+$/.test(normalized)) {
+                        return;
+                    }
+                    counts[normalized] = (counts[normalized] || 0) + 1;
+                });
+                return Object.keys(counts)
+                    .sort(function(a, b) { return counts[b] - counts[a]; })
+                    .slice(0, 6);
+            }
+
+            function countMatches(text, patterns) {
+                var value = String(text || "");
+                if (!value) {
+                    return 0;
+                }
+                return patterns.reduce(function(total, pattern) {
+                    var matches = value.match(pattern);
+                    return total + (matches ? matches.length : 0);
+                }, 0);
+            }
+
+            function findFrequentTopicsByMap(history, topicMap) {
+                var counter = {};
+                history.forEach(function(item) {
+                    var text = String(item && item.content || "");
+                    Object.keys(topicMap).forEach(function(label) {
+                        if (topicMap[label].test(text)) {
+                            counter[label] = (counter[label] || 0) + 1;
+                        }
+                    });
+                });
+                return Object.keys(counter)
+                    .sort(function(a, b) { return counter[b] - counter[a]; })
+                    .slice(0, 4);
+            }
+
+            function detectRelationshipTone(userMessages, assistantMessages) {
+                var userText = userMessages.map(function(item) { return item.content; }).join(" ");
+                var assistantText = assistantMessages.map(function(item) { return item.content; }).join(" ");
+                var intimateScore = countMatches(userText + " " + assistantText, [/想你/g, /抱抱/g, /亲/g, /亲亲/g, /晚安/g, /宝贝/g, /宝宝/g, /喜欢/g, /爱你/g, /想抱/g, /贴贴/g]);
+                var comfortScore = countMatches(userText + " " + assistantText, [/别难过/g, /安慰/g, /抱抱你/g, /辛苦了/g, /没事/g, /陪你/g, /哄你/g, /摸摸/g]);
+                var teasingScore = countMatches(userText + " " + assistantText, [/哼/g, /吃醋/g, /撒娇/g, /逗你/g, /坏/g, /调戏/g, /撩/g]);
+
+                if (intimateScore >= comfortScore && intimateScore >= teasingScore && intimateScore > 0) {
+                    return "这轮互动明显在拉近关系，聊天里有比较多暧昧、亲近和陪伴感";
+                }
+                if (comfortScore >= teasingScore && comfortScore > 0) {
+                    return "这轮聊天更像是在互相照顾情绪，对方有在哄你、安慰你，也在接住你的状态";
+                }
+                if (teasingScore > 0) {
+                    return "这轮气氛偏调情和打闹，聊天里有撒娇、吃醋或者故意逗对方的感觉";
+                }
+                return "这轮聊天整体比较自然，重点在继续熟悉彼此、顺着当下的话题往下聊";
+            }
+
+            function buildEventSummary(history, userMessages, assistantMessages) {
+                var fullText = history.map(function(item) { return item.content; }).join(" \n");
+                var events = [];
+                if (/(礼物|送你|送你个|送花|红包|惊喜|给你买|买给你)/.test(fullText)) {
+                    events.push("中间出现了送礼物、表达心意或者准备惊喜这类互动");
+                }
+                if (/(表白|喜欢你|爱你|在一起|想你|离不开|心动)/.test(fullText)) {
+                    events.push("你们聊到过明显带感情推进意味的话题，关系感不是普通寒暄");
+                }
+                if (/(吵架|生气|别扭|误会|委屈|难过|不开心|吃醋)/.test(fullText)) {
+                    events.push("聊天里带过一点情绪起伏，像是闹小别扭、吃醋或者需要被哄的时刻");
+                }
+                if (/(秘密|只告诉你|别告诉别人|悄悄话)/.test(fullText)) {
+                    events.push("也有分享秘密或更私密内容的倾向，信任感是在往上走的");
+                }
+                if (/(见面|约会|一起去|下次|改天|陪你去)/.test(fullText)) {
+                    events.push("你们提到过见面、约定或者下一步一起做什么，互动不只停留在当下");
+                }
+                return events.slice(0, 2);
+            }
+
+            function buildLifeDetails(history) {
+                var fullText = history.map(function(item) { return item.content; }).join(" \n");
+                var details = [];
+                if (/(吃饭|晚饭|午饭|早餐|宵夜|外卖|奶茶|咖啡)/.test(fullText)) {
+                    details.push("还聊到了吃饭、外卖或者想吃什么这类生活小事");
+                }
+                if (/(睡觉|困了|晚安|刚醒|熬夜|午睡)/.test(fullText)) {
+                    details.push("也带到作息状态，比如困不困、睡没睡、要不要早点休息");
+                }
+                if (/(上班|下班|上课|工作|开会|摸鱼|忙|累)/.test(fullText)) {
+                    details.push("日常节奏也有被提到，像工作、上课、忙不忙、累不累这些细节");
+                }
+                if (/(天气|下雨|太阳|好热|降温|感冒|头疼|不舒服|肚子疼)/.test(fullText)) {
+                    details.push("还有一些身体状态或天气细节，让聊天更像真实陪伴");
+                }
+                if (/(在干嘛|干嘛呢|正在|刚刚|准备|躺着|出门|回家)/.test(fullText)) {
+                    details.push("你们也会交换当下正在做什么，让互动更贴近日常生活");
+                }
+                return details.slice(0, 2);
+            }
+
+            function buildTopicSummary(history) {
+                var topics = findFrequentTopicsByMap(history, {
+                    "星座": /星座|处女座|天蝎|双鱼|白羊|射手|狮子|巨蟹|双子|金牛|摩羯|水瓶/,
+                    "八卦": /八卦|瓜|前任|绯闻|谁和谁|偷偷|爆料/,
+                    "日常": /吃饭|睡觉|上班|上课|天气|外卖|回家|出门/,
+                    "情绪": /难过|开心|委屈|烦|想哭|治愈|安慰/,
+                    "暧昧": /想你|亲亲|抱抱|喜欢|爱你|贴贴|心动/
+                });
+                if (!topics.length) {
+                    return "";
+                }
+                return "话题上主要围着" + topics.join("、") + "这些内容打转，不是单纯随便闲聊";
+            }
+
+            function buildRecentHighlights(userMessages, assistantMessages) {
+                var recent = [];
+                var latestUser = userMessages.length ? userMessages[userMessages.length - 1].content : "";
+                var latestAssistant = assistantMessages.length ? assistantMessages[assistantMessages.length - 1].content : "";
+                if (latestUser) {
+                    recent.push("你最后重点提到的是“" + truncateText(latestUser, 24) + "”");
+                }
+                if (latestAssistant) {
+                    recent.push("对方最后接住的话题是“" + truncateText(latestAssistant, 24) + "”");
+                }
+                return recent.slice(0, 2);
+            }
+
+            function refreshMemorySummary(options) {
+                var silent = options && options.silent === true;
+                var force = options && options.force === true;
+                var nextSummary = buildMemorySummary(chatState.history);
+
+                memorySummaryState.text = nextSummary.summary;
+                memorySummaryState.updatedAt = Date.now();
+
+                if (memoryModal && memoryModal.classList.contains("show")) {
+                    renderMemorySummary(nextSummary);
+                }
+
+                if (!silent) {
+                    showToast(force ? "总结记忆已刷新" : "总结已更新");
+                }
+                return nextSummary;
+            }
+
+            function scheduleMemorySummary(options) {
+                var force = options && options.force === true;
+                var silent = options && options.silent === true;
+                if (memorySummaryState.timer) {
+                    window.clearTimeout(memorySummaryState.timer);
+                }
+                if (!silent) {
+                    showToast(force ? "正在刷新总结..." : "正在整理这段聊天总结...");
+                }
+                memorySummaryState.timer = window.setTimeout(function() {
+                    memorySummaryState.timer = null;
+                    refreshMemorySummary({ force: force, silent: silent });
+                }, force ? 60 : 240);
+            }
+
+            function buildMemorySummary(history) {
+                var safeHistory = Array.isArray(history) ? history.filter(function(item) {
+                    return item && typeof item.content === "string" && item.content.trim();
+                }) : [];
+                var userMessages = safeHistory.filter(function(item) { return item.role === "user"; });
+                var assistantMessages = safeHistory.filter(function(item) { return item.role === "assistant"; });
+                var summary = [];
+                var facts = [];
+                var recent = [];
+                var topics = buildTopicSummary(safeHistory);
+                var relationshipTone = detectRelationshipTone(userMessages, assistantMessages);
+                var events = buildEventSummary(safeHistory, userMessages, assistantMessages);
+                var lifeDetails = buildLifeDetails(safeHistory);
+
+                if (!safeHistory.length) {
+                    return {
+                        summary: "这段会话还没有可总结的内容，先聊几句再回来看看吧。",
+                        facts: [],
+                        recent: []
+                    };
+                }
+
+                summary.push(relationshipTone + "。");
+                events.forEach(function(item) {
+                    summary.push(item + "。");
+                });
+                if (topics) {
+                    summary.push(topics + "。");
+                }
+                lifeDetails.forEach(function(item) {
+                    summary.push(item + "。");
+                });
+
+                if (chatState.title) {
+                    uniquePush(facts, "聊天对象是“" + chatState.title + "”。");
+                }
+                if (chatState.selfName) {
+                    uniquePush(facts, "当前你的昵称是“" + chatState.selfName + "”。");
+                }
+                if (chatState.pendingUserCount > 0) {
+                    uniquePush(facts, "还有 " + chatState.pendingUserCount + " 条你的消息正在等待对方继续回复。");
+                }
+                if (topics) {
+                    uniquePush(facts, topics + "。");
+                }
+
+                buildRecentHighlights(userMessages, assistantMessages).forEach(function(item) {
+                    recent.push(item);
+                });
+                if (safeHistory.length >= 4) {
+                    recent.push("最近互动是连续的，适合沿着刚刚那种关系和情绪继续往下聊。");
+                }
+
+                return {
+                    summary: summary.slice(0, 4).join("") || "这段会话有聊天内容，但暂时还不够形成稳定总结。",
+                    facts: facts.slice(0, 4),
+                    recent: recent.slice(0, 4)
+                };
+            }
+
+            function renderMemorySummary(precomputedData) {
+                if (!memoryContent) {
+                    return;
+                }
+                var data = precomputedData || buildMemorySummary(chatState.history);
+                var factsHtml = data.facts.length
+                    ? data.facts.map(function(item) { return '<div class="memory-bullet">' + escapeHtml(item) + '</div>'; }).join("")
+                    : '<div class="memory-empty">暂时还没有稳定的人设/关系记忆。</div>';
+                var recentHtml = data.recent.length
+                    ? data.recent.map(function(item) { return '<div class="memory-bullet">' + escapeHtml(item) + '</div>'; }).join("")
+                    : '<div class="memory-empty">暂无最近动态。</div>';
+
+                memoryContent.innerHTML = '' +
+                    '<section class="memory-section">' +
+                        '<div class="memory-section-title">本轮总结</div>' +
+                        '<div class="memory-summary">' + escapeHtml(data.summary) + '</div>' +
+                    '</section>' +
+                    '<section class="memory-section">' +
+                        '<div class="memory-section-title">已记住的信息</div>' +
+                        '<div class="memory-list">' + factsHtml + '</div>' +
+                    '</section>' +
+                    '<section class="memory-section">' +
+                        '<div class="memory-section-title">最近状态</div>' +
+                        '<div class="memory-list">' + recentHtml + '</div>' +
+                    '</section>';
+            }
+
+            function focusElement(target) {
+                if (!target || typeof target.focus !== "function") {
+                    return;
+                }
+                try {
+                    target.focus({ preventScroll: true });
+                } catch (error) {
+                    target.focus();
+                }
+            }
+
+            function setLayerHiddenState(layer, hidden) {
+                if (!layer) {
+                    return;
+                }
+                layer.setAttribute("aria-hidden", hidden ? "true" : "false");
+                if ("inert" in layer) {
+                    layer.inert = !!hidden;
+                }
+            }
+
+            function restoreFocusBeforeHide(layer, fallbackTarget) {
+                if (!layer) {
+                    return;
+                }
+                var activeElement = document.activeElement;
+                if (activeElement && layer.contains(activeElement)) {
+                    if (fallbackTarget && document.contains(fallbackTarget) && !fallbackTarget.disabled) {
+                        focusElement(fallbackTarget);
+                    } else if (chatInput) {
+                        focusElement(chatInput);
+                    } else if (memoryLink) {
+                        focusElement(memoryLink);
+                    }
+                }
+            }
+
+            function openMemoryModal() {
+                if (!memoryModal) {
+                    return;
+                }
+                lastMemoryTrigger = document.activeElement && document.activeElement !== document.body
+                    ? document.activeElement
+                    : memoryLink;
+                scheduleMemorySummary({ force: true, silent: false });
+                renderMemorySummary();
+                memoryModal.classList.add("show");
+                setLayerHiddenState(memoryModal, false);
+                window.setTimeout(function() {
+                    focusElement(memoryClose || memoryModal);
+                }, 0);
+            }
+
+            function closeMemoryModal() {
+                if (!memoryModal) {
+                    return;
+                }
+                restoreFocusBeforeHide(memoryModal, lastMemoryTrigger || memoryLink);
+                memoryModal.classList.remove("show");
+                setLayerHiddenState(memoryModal, true);
+                lastMemoryTrigger = null;
+            }
 
             function parseChatRoute() {
                 var params = new URLSearchParams(window.location.search || "");
@@ -1285,12 +1576,22 @@
                 }
 
                 var legacyMode = settings && settings.mode === "detail";
+                var styleData = settings && settings.style && typeof settings.style === "object"
+                    ? settings.style
+                    : {};
                 var preset = normalizeBubblePreset(styleData.preset);
                 var customCss = typeof styleData.customCss === "string" ? styleData.customCss : "";
 
-                    }
+                chatBody.classList.remove("chat-detail-mode", "bubble-theme-bw", "bubble-theme-pink", "bubble-theme-wechat", "bubble-theme-custom");
+
+                if (legacyMode) {
+                    chatBody.classList.add("chat-detail-mode");
                 } else {
-                    chatBody.classList.add("bubble-theme-" + preset);
+                    if (preset === "custom") {
+                        chatBody.classList.add("bubble-theme-custom");
+                    } else {
+                        chatBody.classList.add("bubble-theme-" + preset);
+                    }
                 }
 
                 ensureBubbleCustomStyleEl().textContent = customCss;
@@ -1311,26 +1612,6 @@
                 selectEl.innerHTML = html;
             }
 
-            function readReplyCountRange() {
-                var fallback = { min: 2, max: 8 };
-                var raw = readJSON(REPLY_COUNT_KEY);
-                if (!raw) {
-                    return fallback;
-                }
-                var min = parseInt(raw.min, 10);
-                var max = parseInt(raw.max, 10);
-                if (!Number.isFinite(min) || !Number.isFinite(max)) {
-                    return fallback;
-                }
-                min = clamp(min, 1, 20);
-                max = clamp(max, min, 20);
-                return { min: min, max: max };
-            }
-
-            function saveReplyCountRange(range) {
-                localStorage.setItem(REPLY_COUNT_KEY, JSON.stringify(range));
-            }
-
             function readRetainCount() {
                 var raw = parseInt(localStorage.getItem(RETAIN_COUNT_KEY), 10);
                 if (!Number.isFinite(raw)) {
@@ -1343,61 +1624,7 @@
                 var normalized = clamp(parseInt(value, 10) || CHAT_HISTORY_MAX, 10, 200);
                 CHAT_HISTORY_MAX = normalized;
                 localStorage.setItem(RETAIN_COUNT_KEY, String(normalized));
-                if (retainCountInput) {
-                    retainCountInput.value = normalized;
-                }
                 return normalized;
-            }
-
-            function refreshRangeChips(min, max) {
-                rangeChips.forEach(function(chip) {
-                    var range = chip.getAttribute("data-range") || "";
-                    var parts = range.split("-");
-                    var active = parts.length === 2 && parseInt(parts[0], 10) === min && parseInt(parts[1], 10) === max;
-                    chip.classList.toggle("active", active);
-                });
-            }
-
-            function applyRangeToControls(min, max) {
-                replyMinSelect.value = String(min);
-                replyMaxSelect.value = String(max);
-                refreshRangeChips(min, max);
-            }
-
-            function normalizeRangeInputs() {
-                var min = clamp(parseInt(replyMinSelect.value, 10) || 2, 1, 20);
-                var max = clamp(parseInt(replyMaxSelect.value, 10) || 8, 1, 20);
-                if (max < min) {
-                    max = min;
-                }
-                applyRangeToControls(min, max);
-                return { min: min, max: max };
-            }
-
-            function openFabModal() {
-                if (!fabModal) {
-                    return;
-                }
-                var current = readReplyCountRange();
-                applyRangeToControls(current.min, current.max);
-                if (retainCountInput) {
-                    retainCountInput.value = readRetainCount();
-                }
-                fabModal.classList.add("show");
-                fabModal.setAttribute("aria-hidden", "false");
-                window.setTimeout(function() {
-                    if (replyMinSelect) {
-                        replyMinSelect.focus();
-                    }
-                }, 0);
-            }
-
-            function closeFabModal() {
-                if (!fabModal) {
-                    return;
-                }
-                fabModal.classList.remove("show");
-                fabModal.setAttribute("aria-hidden", "true");
             }
 
             function nextMessageId() {
@@ -1507,12 +1734,15 @@
                 if (!editModal || !editTextarea || !bubble) {
                     return;
                 }
+                lastEditTrigger = document.activeElement && document.activeElement !== document.body
+                    ? document.activeElement
+                    : bubble;
                 closeBubbleActionMenu();
                 chatState.editingBubble = bubble;
                 editTextarea.value = bubble.textContent.trim();
                 updateUndoButtonState();
                 editModal.classList.add("show");
-                editModal.setAttribute("aria-hidden", "false");
+                setLayerHiddenState(editModal, false);
                 window.setTimeout(function() {
                     editTextarea.focus();
                     editTextarea.setSelectionRange(editTextarea.value.length, editTextarea.value.length);
@@ -1523,9 +1753,11 @@
                 if (!editModal) {
                     return;
                 }
+                restoreFocusBeforeHide(editModal, lastEditTrigger || chatInput);
                 editModal.classList.remove("show");
-                editModal.setAttribute("aria-hidden", "true");
+                setLayerHiddenState(editModal, true);
                 chatState.editingBubble = null;
+                lastEditTrigger = null;
             }
 
             function saveBubbleEdit() {
@@ -1613,108 +1845,6 @@
                 });
             }
 
-            function loadFabPosition() {
-                if (!floatingOrb) {
-                    return;
-                }
-                var saved = readJSON(FAB_POSITION_KEY);
-                if (!saved || !Number.isFinite(saved.left) || !Number.isFinite(saved.top)) {
-                    return;
-                }
-                floatingOrb.style.left = saved.left + "px";
-                floatingOrb.style.top = saved.top + "px";
-                floatingOrb.style.right = "auto";
-                floatingOrb.style.bottom = "auto";
-            }
-
-            function saveFabPosition(left, top) {
-                localStorage.setItem(FAB_POSITION_KEY, JSON.stringify({ left: left, top: top }));
-            }
-
-            function initFloatingOrb() {
-                if (!floatingOrb) {
-                    return;
-                }
-
-                loadFabPosition();
-                var drag = {
-                    active: false,
-                    moved: false,
-                    startX: 0,
-                    startY: 0,
-                    offsetX: 0,
-                    offsetY: 0
-                };
-
-                floatingOrb.addEventListener("pointerdown", function(event) {
-                    drag.active = true;
-                    drag.moved = false;
-                    floatingOrb.classList.add("dragging");
-
-                    var rect = floatingOrb.getBoundingClientRect();
-                    floatingOrb.style.left = rect.left + "px";
-                    floatingOrb.style.top = rect.top + "px";
-                    floatingOrb.style.right = "auto";
-                    floatingOrb.style.bottom = "auto";
-
-                    drag.offsetX = event.clientX - rect.left;
-                    drag.offsetY = event.clientY - rect.top;
-                    drag.startX = event.clientX;
-                    drag.startY = event.clientY;
-                    floatingOrb.setPointerCapture(event.pointerId);
-                });
-
-                floatingOrb.addEventListener("pointermove", function(event) {
-                    if (!drag.active) {
-                        return;
-                    }
-
-                    var left = event.clientX - drag.offsetX;
-                    var top = event.clientY - drag.offsetY;
-                    var maxLeft = window.innerWidth - floatingOrb.offsetWidth;
-                    var maxTop = window.innerHeight - floatingOrb.offsetHeight;
-                    left = clamp(left, 0, maxLeft);
-                    top = clamp(top, 0, maxTop);
-
-                    floatingOrb.style.left = left + "px";
-                    floatingOrb.style.top = top + "px";
-
-                    var dx = event.clientX - drag.startX;
-                    var dy = event.clientY - drag.startY;
-                    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-                        drag.moved = true;
-                    }
-                });
-
-                floatingOrb.addEventListener("pointerup", function(event) {
-                    if (!drag.active) {
-                        return;
-                    }
-
-                    drag.active = false;
-                    floatingOrb.classList.remove("dragging");
-                    floatingOrb.releasePointerCapture(event.pointerId);
-
-                    var rect = floatingOrb.getBoundingClientRect();
-                    saveFabPosition(rect.left, rect.top);
-
-                    if (!drag.moved) {
-                        openFabModal();
-                    }
-                });
-
-                floatingOrb.addEventListener("pointercancel", function() {
-                    drag.active = false;
-                    floatingOrb.classList.remove("dragging");
-                });
-
-                floatingOrb.addEventListener("click", function() {
-                    if (!drag.active && !drag.moved) {
-                        openFabModal();
-                    }
-                });
-            }
-
             function trimHistory(list) {
                 return list.slice(-CHAT_HISTORY_MAX);
             }
@@ -1741,6 +1871,7 @@
                 var buckets = readHistoryBuckets();
                 buckets[chatState.chatId] = chatState.history.map(serializeHistoryItem).filter(Boolean);
                 writeHistoryBuckets(buckets);
+                scheduleMemorySummary({ silent: false });
             }
 
             function computePendingUserCount(history) {
@@ -1880,10 +2011,13 @@
                 var linked = findChatMeta(route);
                 var settings = getScopedChatSettings(route.chatId || chatState.chatId) || {};
                 var simple = settings.simple || {};
+                var detail = settings.detail || {};
+                var mode = settings && settings.mode === "detail" ? "detail" : "simple";
                 var title = simple.targetName || "Winter";
                 var subtitle = "简约模式 · " + (simple.callName || "Miffy");
-                var selfName = simple.selfName || "Miffy";
+                var routeCallName = (linked.chat && linked.chat.callName) || (linked.contact && linked.contact.callName) || "";
                 var routeName = (linked.chat && linked.chat.name) || (linked.contact && linked.contact.name) || "";
+                var routeAvatar = (linked.chat && linked.chat.avatar) || (linked.contact && linked.contact.avatar) || "";
                 var previewTitle = route.chatId
                     ? (routeName || title)
                     : (routeName || readText(STORAGE_KEY + "_preview_name", title));
@@ -1892,11 +2026,9 @@
                     : (routeCallName ? ("联系人 · " + routeCallName) : readText(STORAGE_KEY + "_preview_subtitle", subtitle));
                 var targetAvatarText = extractAvatarText(previewTitle || title);
                 var selfName = mode === "detail"
-                    ? (settings.detail && settings.detail.selfName) || "Miffy"
-                    : (settings.simple && settings.simple.selfName) || "Miffy";
+                    ? detail.selfName || "Miffy"
+                    : simple.selfName || "Miffy";
                 var selfAvatarText = extractAvatarText(selfName);
-                var bubbleIncomingStyle = mode === "detail" ? (settings.detail && settings.detail.bubbleIncoming) : null;
-                var bubbleOutgoingStyle = mode === "detail" ? (settings.detail && settings.detail.bubbleOutgoing) : null;
                 var avatarsRaw = settings.avatars || {};
                 var legacyAvatars = {
                     targetUrl: avatarsRaw.targetUrl || "",
@@ -2317,7 +2449,7 @@
             }
 
             function buildSystemPrompt() {
-                var settings = readJSON(STORAGE_KEY);
+                var settings = getScopedChatSettings(chatState.chatId) || readJSON(STORAGE_KEY);
                 if (window.PinkPromptConfig && typeof window.PinkPromptConfig.buildSystemPrompt === "function") {
                     return window.PinkPromptConfig.buildSystemPrompt(settings, chatState);
                 }
@@ -2392,9 +2524,6 @@
             window.addEventListener("storage", refreshChatAppearanceFromStorage);
 
             CHAT_HISTORY_MAX = readRetainCount();
-            if (retainCountInput) {
-                retainCountInput.value = CHAT_HISTORY_MAX;
-            }
 
             var restoredHistory = loadHistory();
             if (restoredHistory && restoredHistory.length) {
@@ -2436,44 +2565,6 @@
                 });
             });
 
-            buildNumberOptions(replyMinSelect, 1, 20);
-            buildNumberOptions(replyMaxSelect, 1, 20);
-            var initialRange = readReplyCountRange();
-            applyRangeToControls(initialRange.min, initialRange.max);
-
-            if (replyMinSelect && replyMaxSelect) {
-                replyMinSelect.addEventListener("change", normalizeRangeInputs);
-                replyMaxSelect.addEventListener("change", normalizeRangeInputs);
-            }
-
-            rangeChips.forEach(function(chip) {
-                chip.addEventListener("click", function() {
-                    var parts = (chip.getAttribute("data-range") || "").split("-");
-                    if (parts.length !== 2) {
-                        return;
-                    }
-                    var min = clamp(parseInt(parts[0], 10) || 2, 1, 20);
-                    var max = clamp(parseInt(parts[1], 10) || 8, min, 20);
-                    applyRangeToControls(min, max);
-                });
-            });
-
-            if (fabSave) {
-                fabSave.addEventListener("click", function() {
-                    var range = normalizeRangeInputs();
-                    var retainCount = saveRetainCount(retainCountInput && retainCountInput.value);
-                    chatState.history = trimHistory(chatState.history);
-                    saveHistory();
-                    renderHistoryFromStorage(chatState.history);
-                    saveReplyCountRange(range);
-                    closeFabModal();
-                    showToast("已保存：回复 " + range.min + "-" + range.max + " 条，记录保留 " + retainCount + " 条");
-                });
-            }
-
-            if (fabClose) {
-                fabClose.addEventListener("click", closeFabModal);
-            }
             if (editSaveBtn) {
                 editSaveBtn.addEventListener("click", saveBubbleEdit);
             }
@@ -2482,6 +2573,19 @@
             }
             if (editUndoBtn) {
                 editUndoBtn.addEventListener("click", undoBubbleEdit);
+            }
+            if (memoryLink) {
+                memoryLink.addEventListener("click", function() {
+                    openMemoryModal();
+                });
+            }
+            if (memoryClose) {
+                memoryClose.addEventListener("click", closeMemoryModal);
+            }
+            if (memoryRefresh) {
+                memoryRefresh.addEventListener("click", function() {
+                    scheduleMemorySummary({ force: true, silent: false });
+                });
             }
             if (bubbleEditAction) {
                 bubbleEditAction.addEventListener("click", function() {
@@ -2493,17 +2597,17 @@
             if (bubbleUndoAction) {
                 bubbleUndoAction.addEventListener("click", deleteBubbleFromMenu);
             }
-            if (fabModal) {
-                fabModal.addEventListener("click", function(event) {
-                    if (event.target === fabModal) {
-                        closeFabModal();
-                    }
-                });
-            }
             if (editModal) {
                 editModal.addEventListener("click", function(event) {
                     if (event.target === editModal) {
                         closeEditModal();
+                    }
+                });
+            }
+            if (memoryModal) {
+                memoryModal.addEventListener("click", function(event) {
+                    if (event.target === memoryModal) {
+                        closeMemoryModal();
                     }
                 });
             }
@@ -2537,11 +2641,11 @@
                 if (event.key === "Escape" && attachmentPanel && attachmentPanel.classList.contains("show")) {
                     closeAttachmentPanel();
                 }
-                if (event.key === "Escape" && fabModal && fabModal.classList.contains("show")) {
-                    closeFabModal();
-                }
                 if (event.key === "Escape" && editModal && editModal.classList.contains("show")) {
                     closeEditModal();
+                }
+                if (event.key === "Escape" && memoryModal && memoryModal.classList.contains("show")) {
+                    closeMemoryModal();
                 }
                 if (event.key === "Escape" && bubbleActionMenu && bubbleActionMenu.classList.contains("show")) {
                     closeBubbleActionMenu();
@@ -2563,7 +2667,8 @@
             
             initExistingBubbles();
             bindBubbleEditor();
-            initFloatingOrb();
+            setLayerHiddenState(editModal, true);
+            setLayerHiddenState(memoryModal, true);
             syncAttachmentPanelHeight();
             window.addEventListener("resize", syncAttachmentPanelHeight);
 

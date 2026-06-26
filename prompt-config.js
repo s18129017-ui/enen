@@ -59,34 +59,57 @@
         return lines.join("\n");
     }
 
+    function buildFactRule(label, value) {
+        var text = String(value || "").trim();
+        if (!text) {
+            return "";
+        }
+        return label + "：" + text + "（这是已确定事实，后续对话中必须保持一致，不可擅自更改、遗忘或编造其他版本）";
+    }
+
+    function buildIdentityGuard(simple, chatState) {
+        var targetName = simple.targetName || chatState.title || "对方";
+        var selfName = simple.selfName || chatState.selfName || "用户";
+        var guardLines = [
+            "【身份一致性硬规则】",
+            "你就是“" + targetName + "”，正在和“" + selfName + "”聊天。",
+            "凡是下面明确写出的生日、出生地、人设、称呼、关系、禁忌、细节，全部都属于已确定设定。",
+            "你回复时必须始终与这些设定一致，不得模糊带过，不得自相矛盾，不得随意改设定。",
+            "如果用户提到这些设定，你要沿用这里的内容继续聊，而不是重新编造。"
+        ];
+        return joinLines(guardLines);
+    }
+
     function buildSimplePrompt(settings, chatState) {
         var simple = settings.simple || {};
         var targetFacts = [
-            simple.targetBirthday ? "生日：" + simple.targetBirthday : "",
-            simple.targetBirthplace ? "出生地：" + simple.targetBirthplace : "",
-            simple.targetDetails ? "对象细节：" + simple.targetDetails : ""
+            buildFactRule("生日", simple.targetBirthday),
+            buildFactRule("出生地", simple.targetBirthplace),
+            buildFactRule("对象细节", simple.targetDetails)
         ].filter(Boolean);
         var selfFacts = [
-            simple.selfBirthday ? "生日：" + simple.selfBirthday : "",
-            simple.selfBirthplace ? "出生地：" + simple.selfBirthplace : "",
-            simple.selfDetails ? "我的细节：" + simple.selfDetails : ""
+            buildFactRule("生日", simple.selfBirthday),
+            buildFactRule("出生地", simple.selfBirthplace),
+            buildFactRule("我的细节", simple.selfDetails)
         ].filter(Boolean);
         return joinLines([
             "你正在扮演聊天对象。",
+            buildIdentityGuard(simple, chatState),
+            "",
             "【你（聊天对象）】",
             "对象昵称：" + (simple.targetName || chatState.title || "对方"),
             "常用称呼：" + (simple.callName || ""),
-            "人设：" + (simple.persona || "温柔自然"),
-            "禁忌：" + (simple.avoid || "无"),
+            buildFactRule("人设", simple.persona || "温柔自然"),
+            buildFactRule("禁忌", simple.avoid || "无"),
             targetFacts.length ? targetFacts.join("；") : "",
             "",
             "【用户（我）】",
             "我的昵称：" + (simple.selfName || chatState.selfName || "用户"),
-            "我的身份：" + (simple.selfTag || "用户"),
-            "我的人设：" + (simple.selfPersona || "自然聊天"),
+            buildFactRule("我的身份", simple.selfTag || "用户"),
+            buildFactRule("我的人设", simple.selfPersona || "自然聊天"),
             selfFacts.length ? selfFacts.join("；") : "",
             "",
-            "交流目标：你要根据双方人设和关系来回复，避免 OOC。",
+            "交流目标：你要根据双方人设和关系来回复，避免 OOC；凡涉及生日、出生地、身份、经历等细节时，优先严格服从上面的既定信息。",
             buildReplyCountRule(),
             CUSTOM_STYLE_BLOCK.trim()
         ]);
