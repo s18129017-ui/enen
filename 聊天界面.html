@@ -981,6 +981,8 @@
             var CHAT_HISTORY_MAX = 30;
             var REPLY_COUNT_KEY = "miffy_reply_count_v1";
             var RETAIN_COUNT_KEY = "miffy_chat_retain_count_v1";
+            var MEMORY_ROUNDS_KEY = "miffy_memory_rounds_v1";
+            var MEMORY_DECADES_KEY = "miffy_memory_decades_v1";
             var titleEl = document.getElementById("chatTitle");
             var subtitleEl = document.getElementById("chatSubtitle");
             var chatBody = document.querySelector(".chat-body");
@@ -1016,8 +1018,8 @@
             var lastEditTrigger = null;
             var memorySummaryState = {
                 timer: null,
-                text: "",
-                updatedAt: 0
+                running: false,
+                lastError: ""
             };
 
             var chatState = {
@@ -1038,17 +1040,6 @@
             };
             var activeReplyRequest = null;
 
-            function truncateText(text, limit) {
-                var value = String(text || "").trim();
-                if (!value) {
-                    return "";
-                }
-                if (value.length <= limit) {
-                    return value;
-                }
-                return value.slice(0, Math.max(0, limit - 1)).trim() + "…";
-            }
-
             function uniquePush(list, value) {
                 if (!value) {
                     return;
@@ -1058,190 +1049,337 @@
                 }
             }
 
-            function extractKeywordsFromHistory(history) {
-                var text = history.map(function(item) {
-                    return item && item.content ? item.content : "";
-                }).join(" ");
-                var matches = text.match(/[\u4e00-\u9fa5A-Za-z0-9]{2,12}/g) || [];
-                var ignoreMap = {
-                    "哈哈": true,
-                    "就是": true,
-                    "你们": true,
-                    "我们": true,
-                    "然后": true,
-                    "现在": true,
-                    "真的": true,
-                    "可以": true,
-                    "一下": true,
-                    "一下子": true,
-                    "时候": true,
-                    "这个": true,
-                    "那个": true,
-                    "因为": true,
-                    "所以": true,
-                    "今天": true,
-                    "明天": true,
-                    "晚上": true,
-                    "早上": true,
-                    "中午": true,
-                    "自己": true,
-                    "已经": true,
-                    "感觉": true,
-                    "一个": true,
-                    "没有": true,
-                    "还是": true,
-                    "什么": true,
-                    "怎么": true,
-                    "然后呢": true,
-                    "你在": true,
-                    "我在": true
-                };
-                var counts = {};
-                matches.forEach(function(word) {
-                    var normalized = String(word || "").trim();
-                    if (!normalized || ignoreMap[normalized]) {
-                        return;
-                    }
-                    if (/^\d+$/.test(normalized)) {
-                        return;
-                    }
-                    counts[normalized] = (counts[normalized] || 0) + 1;
-                });
-                return Object.keys(counts)
-                    .sort(function(a, b) { return counts[b] - counts[a]; })
-                    .slice(0, 6);
-            }
-
-            function countMatches(text, patterns) {
-                var value = String(text || "");
-                if (!value) {
-                    return 0;
+            function readMemoryBuckets(key) {
+                var raw = readJSON(key);
+                if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+                    return raw;
                 }
-                return patterns.reduce(function(total, pattern) {
-                    var matches = value.match(pattern);
-                    return total + (matches ? matches.length : 0);
-                }, 0);
+                return {};
             }
 
-            function findFrequentTopicsByMap(history, topicMap) {
-                var counter = {};
-                history.forEach(function(item) {
-                    var text = String(item && item.content || "");
-                    Object.keys(topicMap).forEach(function(label) {
-                        if (topicMap[label].test(text)) {
-                            counter[label] = (counter[label] || 0) + 1;
+            function writeMemoryBuckets(key, map) {
+                localStorage.setItem(key, JSON.stringify(map || {}));
+            }
+
+            function readChatMemoryRounds() {
+                var buckets = readMemoryBuckets(MEMORY_ROUNDS_KEY);
+                var list = buckets[chatState.chatId];
+                return Array.isArray(list) ? list : [];
+            }
+
+            function writeChatMemoryRounds(list) {
+                var buckets = readMemoryBuckets(MEMORY_ROUNDS_KEY);
+                buckets[chatState.chatId] = Array.isArray(list) ? list : [];
+                writeMemoryBuckets(MEMORY_ROUNDS_KEY, buckets);
+            }
+
+            function readChatMemoryDecades() {
+                var buckets = readMemoryBuckets(MEMORY_DECADES_KEY);
+                var list = buckets[chatState.chatId];
+                return Array.isArray(list) ? list : [];
+            }
+
+            function writeChatMemoryDecades(list) {
+                var buckets = readMemoryBuckets(MEMORY_DECADES_KEY);
+                buckets[chatState.chatId] = Array.isArray(list) ? list : [];
+                writeMemoryBuckets(MEMORY_DECADES_KEY, buckets);
+            }
+
+            function buildConversationRounds(history) {
+                var safeHistory = Array.isArray(history) ? history.filter(function(item) {
+                    return item && (item.role === "user" || item.role === "assistant") && typeof item.content === "string" && item.content.trim();
+                }) : [];
+                var rounds = [];
+                var current = null;
+
+                safeHistory.forEach(function(item) {
+                    if (item.role === "user") {
+                        if (current && current.userMessages.length && current.assistantMessages.length) {
+                            rounds.push(current);
+                            current = null;
+                        }
+                        if (!current) {
+                            current = {
+                                userMessages: [],
+                                assistantMessages: [],
+                                startedAt: item.time || formatMessageTime()
+                            };
+                        }
+                        current.userMessages.push(item);
+                        return;
+                    }
+                    if (!current || !current.userMessages.length) {
+                        return;
+                    }
+                    current.assistantMessages.push(item);
+                });
+
+                if (current && current.userMessages.length && current.assistantMessages.length) {
+                    rounds.push(current);
+                }
+
+                return rounds.map(function(round, index) {
+                    var userText = round.userMessages.map(function(item) { return item.content; }).join("\n");
+                    var assistantText = round.assistantMessages.map(function(item) { return item.content; }).join("\n");
+                    return {
+                        roundNumber: index + 1,
+                        userText: userText,
+                        assistantText: assistantText,
+                        signature: [index + 1, userText, assistantText].join("||"),
+                        happenedAt: round.assistantMessages[round.assistantMessages.length - 1].time || round.startedAt || formatMessageTime()
+                    };
+                });
+            }
+
+            function normalizeMemoryList(value, emptyLabel) {
+                var list = Array.isArray(value) ? value : [];
+                var result = list.map(function(item) {
+                    return String(item || "").trim();
+                }).filter(Boolean).slice(0, 6);
+                return result.length ? result : [emptyLabel];
+            }
+
+            function extractJsonObject(text) {
+                var raw = String(text || "").trim();
+                if (!raw) {
+                    return null;
+                }
+                try {
+                    return JSON.parse(raw);
+                } catch (error) {}
+                var match = raw.match(/\{[\s\S]*\}/);
+                if (!match) {
+                    return null;
+                }
+                try {
+                    return JSON.parse(match[0]);
+                } catch (error2) {
+                    return null;
+                }
+            }
+
+            function normalizeRoundMemoryResponse(data, round) {
+                var parsed = extractJsonObject(parseAssistantContent(data));
+                if (!parsed) {
+                    throw new Error("记忆总结格式异常");
+                }
+                return {
+                    roundNumber: round.roundNumber,
+                    signature: round.signature,
+                    happenedAt: round.happenedAt,
+                    happened: String(parsed.happened || parsed.summary || "").trim() || "本轮有聊天内容，但未成功返回总结",
+                    majorEvents: normalizeMemoryList(parsed.major_events || parsed.events, "未提及重大事件"),
+                    importantItems: normalizeMemoryList(parsed.important_items || parsed.items, "未提及重要物品"),
+                    relationProgress: normalizeMemoryList(parsed.relation_progress || parsed.emotions, "未提及明显关系推进"),
+                    createdAt: Date.now()
+                };
+            }
+
+            function normalizeDecadeMemoryResponse(data, startRound, endRound, sourceRounds) {
+                var parsed = extractJsonObject(parseAssistantContent(data));
+                if (!parsed) {
+                    throw new Error("十轮总结格式异常");
+                }
+                return {
+                    groupIndex: Math.ceil(endRound / 10),
+                    startRound: startRound,
+                    endRound: endRound,
+                    happened: String(parsed.happened || parsed.summary || "").trim() || "这十轮发生了连续互动，但总结不完整",
+                    majorEvents: normalizeMemoryList(parsed.major_events || parsed.events, "未提及重大事件"),
+                    importantItems: normalizeMemoryList(parsed.important_items || parsed.items, "未提及重要物品"),
+                    overallChanges: normalizeMemoryList(parsed.overall_changes || parsed.relation_progress, "未提及明显阶段变化"),
+                    sourceRoundNumbers: sourceRounds.map(function(item) { return item.roundNumber; }),
+                    createdAt: Date.now()
+                };
+            }
+
+            function buildRoundMemoryMessages(round) {
+                return [
+                    {
+                        role: "system",
+                        content: [
+                            "你是聊天记忆整理器，只负责根据本轮真实聊天记录做具体记忆总结。",
+                            "必须输出 JSON，不要输出解释、前缀、代码块。",
+                            "字段固定为：happened、major_events、important_items、relation_progress。",
+                            "happened 用 1 到 3 句明确写本轮发生了什么；major_events 写重大事件数组；important_items 写重要物品、礼物、地点数组；relation_progress 写情绪变化或关系推进数组。",
+                            "没有提到就写“未提及”，不要编造。"
+                        ].join("\n")
+                    },
+                    {
+                        role: "user",
+                        content: [
+                            "请总结第 " + round.roundNumber + " 轮聊天记忆。",
+                            "聊天对象：" + (chatState.title || "对方"),
+                            "用户：" + (chatState.selfName || "我"),
+                            "【用户消息】",
+                            round.userText || "未提及",
+                            "【对方回复】",
+                            round.assistantText || "未提及",
+                            "请只返回 JSON。"
+                        ].join("\n")
+                    }
+                ];
+            }
+
+            function buildDecadeMemoryMessages(rounds) {
+                var startRound = rounds[0].roundNumber;
+                var endRound = rounds[rounds.length - 1].roundNumber;
+                return [
+                    {
+                        role: "system",
+                        content: [
+                            "你是聊天阶段记忆整理器，只根据已存在的分轮记忆做十轮阶段总结。",
+                            "必须输出 JSON，不要输出解释、前缀、代码块。",
+                            "字段固定为：happened、major_events、important_items、overall_changes。",
+                            "happened 概括这十轮整体发生了什么；major_events 写阶段重大事件；important_items 写关键物品、礼物、地点；overall_changes 写关系、情绪、互动模式变化。",
+                            "没有提到就写“未提及”，不要编造。"
+                        ].join("\n")
+                    },
+                    {
+                        role: "user",
+                        content: [
+                            "请总结第 " + startRound + " 到第 " + endRound + " 轮的阶段记忆。",
+                            rounds.map(function(item) {
+                                return [
+                                    "第 " + item.roundNumber + " 轮：",
+                                    "发生了什么：" + item.happened,
+                                    "重大事件：" + item.majorEvents.join("；"),
+                                    "重要物品：" + item.importantItems.join("；"),
+                                    "关系推进：" + item.relationProgress.join("；")
+                                ].join("\n");
+                            }).join("\n\n"),
+                            "请只返回 JSON。"
+                        ].join("\n")
+                    }
+                ];
+            }
+
+            function callMemoryApi(preset, messages) {
+                var base = normalizeBaseUrl(preset.baseUrl);
+                var endpointCandidates = [
+                    base + "/chat/completions",
+                    base + "/v1/chat/completions"
+                ];
+                var idx = 0;
+
+                function tryNext(lastErr) {
+                    if (idx >= endpointCandidates.length) {
+                        return Promise.reject(lastErr || new Error("无法访问记忆接口"));
+                    }
+                    var url = endpointCandidates[idx++];
+                    return fetchWithTimeout(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + preset.apiKey
+                        },
+                        body: JSON.stringify({
+                            model: preset.model,
+                            messages: messages,
+                            temperature: 0.2,
+                            response_format: { type: "json_object" }
+                        })
+                    }, 45000, { controller: null })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error("HTTP " + response.status + " @ " + url);
+                        }
+                        return response.json();
+                    })
+                    .catch(function(err) {
+                        return tryNext(err);
+                    });
+                }
+
+                return tryNext();
+            }
+
+            function syncMemorySummary(options) {
+                var silent = options && options.silent === true;
+                var preset = getActivePreset();
+                var roundsFromHistory = buildConversationRounds(chatState.history);
+                var storedRounds = readChatMemoryRounds();
+                var storedDecades = readChatMemoryDecades();
+                var roundMap = {};
+                storedRounds.forEach(function(item) {
+                    if (item && item.signature) {
+                        roundMap[item.signature] = item;
+                    }
+                });
+                var missingRounds = roundsFromHistory.filter(function(round) {
+                    return !roundMap[round.signature];
+                });
+
+                if (!missingRounds.length) {
+                    if (memoryModal && memoryModal.classList.contains("show")) {
+                        renderMemorySummary();
+                    }
+                    return Promise.resolve({ rounds: storedRounds, decades: storedDecades, skipped: true });
+                }
+                if (!preset || !preset.baseUrl || !preset.apiKey || !preset.model) {
+                    memorySummaryState.lastError = "请先在 API 配置里启用可用预设";
+                    return Promise.resolve({ rounds: storedRounds, decades: storedDecades, skipped: true });
+                }
+
+                memorySummaryState.running = true;
+                memorySummaryState.lastError = "";
+
+                return missingRounds.reduce(function(chain, round) {
+                    return chain.then(function(currentRounds) {
+                        return callMemoryApi(preset, buildRoundMemoryMessages(round)).then(function(data) {
+                            currentRounds.push(normalizeRoundMemoryResponse(data, round));
+                            currentRounds.sort(function(a, b) { return a.roundNumber - b.roundNumber; });
+                            writeChatMemoryRounds(currentRounds);
+                            return currentRounds;
+                        });
+                    });
+                }, Promise.resolve(storedRounds.slice())).then(function(finalRounds) {
+                    var decadeMap = {};
+                    storedDecades.forEach(function(item) {
+                        if (item && item.groupIndex) {
+                            decadeMap[item.groupIndex] = item;
                         }
                     });
+                    var blocks = [];
+                    for (var i = 0; i + 9 < finalRounds.length; i += 10) {
+                        var block = finalRounds.slice(i, i + 10);
+                        var groupIndex = Math.ceil(block[block.length - 1].roundNumber / 10);
+                        if (!decadeMap[groupIndex]) {
+                            blocks.push(block);
+                        }
+                    }
+                    return blocks.reduce(function(chain, block) {
+                        return chain.then(function(currentDecades) {
+                            return callMemoryApi(preset, buildDecadeMemoryMessages(block)).then(function(data) {
+                                currentDecades.push(normalizeDecadeMemoryResponse(data, block[0].roundNumber, block[block.length - 1].roundNumber, block));
+                                currentDecades.sort(function(a, b) { return a.groupIndex - b.groupIndex; });
+                                writeChatMemoryDecades(currentDecades);
+                                return currentDecades;
+                            });
+                        });
+                    }, Promise.resolve(storedDecades.slice())).then(function(finalDecades) {
+                        return { rounds: finalRounds, decades: finalDecades };
+                    });
+                }).then(function(result) {
+                    memorySummaryState.running = false;
+                    if (!silent) {
+                        showToast("记忆总结已更新");
+                    }
+                    if (memoryModal && memoryModal.classList.contains("show")) {
+                        renderMemorySummary();
+                    }
+                    return result;
+                }).catch(function(error) {
+                    memorySummaryState.running = false;
+                    memorySummaryState.lastError = error && error.message ? error.message : "未知错误";
+                    if (!silent) {
+                        showToast("记忆总结失败：" + memorySummaryState.lastError);
+                    }
+                    if (memoryModal && memoryModal.classList.contains("show")) {
+                        renderMemorySummary();
+                    }
+                    return { rounds: readChatMemoryRounds(), decades: readChatMemoryDecades(), error: memorySummaryState.lastError };
                 });
-                return Object.keys(counter)
-                    .sort(function(a, b) { return counter[b] - counter[a]; })
-                    .slice(0, 4);
-            }
-
-            function detectRelationshipTone(userMessages, assistantMessages) {
-                var userText = userMessages.map(function(item) { return item.content; }).join(" ");
-                var assistantText = assistantMessages.map(function(item) { return item.content; }).join(" ");
-                var intimateScore = countMatches(userText + " " + assistantText, [/想你/g, /抱抱/g, /亲/g, /亲亲/g, /晚安/g, /宝贝/g, /宝宝/g, /喜欢/g, /爱你/g, /想抱/g, /贴贴/g]);
-                var comfortScore = countMatches(userText + " " + assistantText, [/别难过/g, /安慰/g, /抱抱你/g, /辛苦了/g, /没事/g, /陪你/g, /哄你/g, /摸摸/g]);
-                var teasingScore = countMatches(userText + " " + assistantText, [/哼/g, /吃醋/g, /撒娇/g, /逗你/g, /坏/g, /调戏/g, /撩/g]);
-
-                if (intimateScore >= comfortScore && intimateScore >= teasingScore && intimateScore > 0) {
-                    return "这轮互动明显在拉近关系，聊天里有比较多暧昧、亲近和陪伴感";
-                }
-                if (comfortScore >= teasingScore && comfortScore > 0) {
-                    return "这轮聊天更像是在互相照顾情绪，对方有在哄你、安慰你，也在接住你的状态";
-                }
-                if (teasingScore > 0) {
-                    return "这轮气氛偏调情和打闹，聊天里有撒娇、吃醋或者故意逗对方的感觉";
-                }
-                return "这轮聊天整体比较自然，重点在继续熟悉彼此、顺着当下的话题往下聊";
-            }
-
-            function buildEventSummary(history, userMessages, assistantMessages) {
-                var fullText = history.map(function(item) { return item.content; }).join(" \n");
-                var events = [];
-                if (/(礼物|送你|送你个|送花|红包|惊喜|给你买|买给你)/.test(fullText)) {
-                    events.push("中间出现了送礼物、表达心意或者准备惊喜这类互动");
-                }
-                if (/(表白|喜欢你|爱你|在一起|想你|离不开|心动)/.test(fullText)) {
-                    events.push("你们聊到过明显带感情推进意味的话题，关系感不是普通寒暄");
-                }
-                if (/(吵架|生气|别扭|误会|委屈|难过|不开心|吃醋)/.test(fullText)) {
-                    events.push("聊天里带过一点情绪起伏，像是闹小别扭、吃醋或者需要被哄的时刻");
-                }
-                if (/(秘密|只告诉你|别告诉别人|悄悄话)/.test(fullText)) {
-                    events.push("也有分享秘密或更私密内容的倾向，信任感是在往上走的");
-                }
-                if (/(见面|约会|一起去|下次|改天|陪你去)/.test(fullText)) {
-                    events.push("你们提到过见面、约定或者下一步一起做什么，互动不只停留在当下");
-                }
-                return events.slice(0, 2);
-            }
-
-            function buildLifeDetails(history) {
-                var fullText = history.map(function(item) { return item.content; }).join(" \n");
-                var details = [];
-                if (/(吃饭|晚饭|午饭|早餐|宵夜|外卖|奶茶|咖啡)/.test(fullText)) {
-                    details.push("还聊到了吃饭、外卖或者想吃什么这类生活小事");
-                }
-                if (/(睡觉|困了|晚安|刚醒|熬夜|午睡)/.test(fullText)) {
-                    details.push("也带到作息状态，比如困不困、睡没睡、要不要早点休息");
-                }
-                if (/(上班|下班|上课|工作|开会|摸鱼|忙|累)/.test(fullText)) {
-                    details.push("日常节奏也有被提到，像工作、上课、忙不忙、累不累这些细节");
-                }
-                if (/(天气|下雨|太阳|好热|降温|感冒|头疼|不舒服|肚子疼)/.test(fullText)) {
-                    details.push("还有一些身体状态或天气细节，让聊天更像真实陪伴");
-                }
-                if (/(在干嘛|干嘛呢|正在|刚刚|准备|躺着|出门|回家)/.test(fullText)) {
-                    details.push("你们也会交换当下正在做什么，让互动更贴近日常生活");
-                }
-                return details.slice(0, 2);
-            }
-
-            function buildTopicSummary(history) {
-                var topics = findFrequentTopicsByMap(history, {
-                    "星座": /星座|处女座|天蝎|双鱼|白羊|射手|狮子|巨蟹|双子|金牛|摩羯|水瓶/,
-                    "八卦": /八卦|瓜|前任|绯闻|谁和谁|偷偷|爆料/,
-                    "日常": /吃饭|睡觉|上班|上课|天气|外卖|回家|出门/,
-                    "情绪": /难过|开心|委屈|烦|想哭|治愈|安慰/,
-                    "暧昧": /想你|亲亲|抱抱|喜欢|爱你|贴贴|心动/
-                });
-                if (!topics.length) {
-                    return "";
-                }
-                return "话题上主要围着" + topics.join("、") + "这些内容打转，不是单纯随便闲聊";
-            }
-
-            function buildRecentHighlights(userMessages, assistantMessages) {
-                var recent = [];
-                var latestUser = userMessages.length ? userMessages[userMessages.length - 1].content : "";
-                var latestAssistant = assistantMessages.length ? assistantMessages[assistantMessages.length - 1].content : "";
-                if (latestUser) {
-                    recent.push("你最后重点提到的是“" + truncateText(latestUser, 24) + "”");
-                }
-                if (latestAssistant) {
-                    recent.push("对方最后接住的话题是“" + truncateText(latestAssistant, 24) + "”");
-                }
-                return recent.slice(0, 2);
-            }
-
-            function refreshMemorySummary(options) {
-                var silent = options && options.silent === true;
-                var force = options && options.force === true;
-                var nextSummary = buildMemorySummary(chatState.history);
-
-                memorySummaryState.text = nextSummary.summary;
-                memorySummaryState.updatedAt = Date.now();
-
-                if (memoryModal && memoryModal.classList.contains("show")) {
-                    renderMemorySummary(nextSummary);
-                }
-
-                if (!silent) {
-                    showToast(force ? "总结记忆已刷新" : "总结已更新");
-                }
-                return nextSummary;
             }
 
             function scheduleMemorySummary(options) {
@@ -1251,99 +1389,73 @@
                     window.clearTimeout(memorySummaryState.timer);
                 }
                 if (!silent) {
-                    showToast(force ? "正在刷新总结..." : "正在整理这段聊天总结...");
+                    showToast(force ? "正在刷新记忆总结..." : "正在整理本轮记忆...");
                 }
                 memorySummaryState.timer = window.setTimeout(function() {
                     memorySummaryState.timer = null;
-                    refreshMemorySummary({ force: force, silent: silent });
-                }, force ? 60 : 240);
+                    if (memorySummaryState.running) {
+                        return;
+                    }
+                    syncMemorySummary({ silent: silent });
+                }, force ? 80 : 280);
             }
 
-            function buildMemorySummary(history) {
-                var safeHistory = Array.isArray(history) ? history.filter(function(item) {
-                    return item && typeof item.content === "string" && item.content.trim();
-                }) : [];
-                var userMessages = safeHistory.filter(function(item) { return item.role === "user"; });
-                var assistantMessages = safeHistory.filter(function(item) { return item.role === "assistant"; });
-                var summary = [];
-                var facts = [];
-                var recent = [];
-                var topics = buildTopicSummary(safeHistory);
-                var relationshipTone = detectRelationshipTone(userMessages, assistantMessages);
-                var events = buildEventSummary(safeHistory, userMessages, assistantMessages);
-                var lifeDetails = buildLifeDetails(safeHistory);
-
-                if (!safeHistory.length) {
-                    return {
-                        summary: "这段会话还没有可总结的内容，先聊几句再回来看看吧。",
-                        facts: [],
-                        recent: []
-                    };
-                }
-
-                summary.push(relationshipTone + "。");
-                events.forEach(function(item) {
-                    summary.push(item + "。");
-                });
-                if (topics) {
-                    summary.push(topics + "。");
-                }
-                lifeDetails.forEach(function(item) {
-                    summary.push(item + "。");
-                });
-
-                if (chatState.title) {
-                    uniquePush(facts, "聊天对象是“" + chatState.title + "”。");
-                }
-                if (chatState.selfName) {
-                    uniquePush(facts, "当前你的昵称是“" + chatState.selfName + "”。");
-                }
-                if (chatState.pendingUserCount > 0) {
-                    uniquePush(facts, "还有 " + chatState.pendingUserCount + " 条你的消息正在等待对方继续回复。");
-                }
-                if (topics) {
-                    uniquePush(facts, topics + "。");
-                }
-
-                buildRecentHighlights(userMessages, assistantMessages).forEach(function(item) {
-                    recent.push(item);
-                });
-                if (safeHistory.length >= 4) {
-                    recent.push("最近互动是连续的，适合沿着刚刚那种关系和情绪继续往下聊。");
-                }
-
-                return {
-                    summary: summary.slice(0, 4).join("") || "这段会话有聊天内容，但暂时还不够形成稳定总结。",
-                    facts: facts.slice(0, 4),
-                    recent: recent.slice(0, 4)
-                };
-            }
-
-            function renderMemorySummary(precomputedData) {
+            function renderMemorySummary() {
                 if (!memoryContent) {
                     return;
                 }
-                var data = precomputedData || buildMemorySummary(chatState.history);
-                var factsHtml = data.facts.length
-                    ? data.facts.map(function(item) { return '<div class="memory-bullet">' + escapeHtml(item) + '</div>'; }).join("")
-                    : '<div class="memory-empty">暂时还没有稳定的人设/关系记忆。</div>';
-                var recentHtml = data.recent.length
-                    ? data.recent.map(function(item) { return '<div class="memory-bullet">' + escapeHtml(item) + '</div>'; }).join("")
-                    : '<div class="memory-empty">暂无最近动态。</div>';
+                var rounds = readChatMemoryRounds();
+                var decades = readChatMemoryDecades();
+                var latestRound = rounds.length ? rounds[rounds.length - 1] : null;
+                var decadeHtml = decades.length
+                    ? decades.slice().reverse().map(function(item) {
+                        var eventsHtml = item.majorEvents.map(function(entry) { return '<div class="memory-bullet">' + escapeHtml(entry) + '</div>'; }).join("");
+                        var itemsHtml = item.importantItems.map(function(entry) { return '<div class="memory-bullet">' + escapeHtml(entry) + '</div>'; }).join("");
+                        var changesHtml = item.overallChanges.map(function(entry) { return '<div class="memory-bullet">' + escapeHtml(entry) + '</div>'; }).join("");
+                        return '' +
+                            '<section class="memory-section">' +
+                                '<div class="memory-section-title">第 ' + item.startRound + ' - ' + item.endRound + ' 轮阶段总结</div>' +
+                                '<div class="memory-summary">' + escapeHtml(item.happened) + '</div>' +
+                                '<div class="memory-list">' + eventsHtml + itemsHtml + changesHtml + '</div>' +
+                            '</section>';
+                    }).join("")
+                    : '<section class="memory-section"><div class="memory-section-title">十轮总结</div><div class="memory-empty">累计满十轮后，这里会保留每个十轮阶段总结。</div></section>';
+
+                var roundDetailHtml = latestRound
+                    ? '' +
+                        '<section class="memory-section">' +
+                            '<div class="memory-section-title">第 ' + latestRound.roundNumber + ' 轮发生了什么</div>' +
+                            '<div class="memory-summary">' + escapeHtml(latestRound.happened) + '</div>' +
+                        '</section>' +
+                        '<section class="memory-section">' +
+                            '<div class="memory-section-title">重大事件</div>' +
+                            '<div class="memory-list">' + latestRound.majorEvents.map(function(item) { return '<div class="memory-bullet">' + escapeHtml(item) + '</div>'; }).join("") + '</div>' +
+                        '</section>' +
+                        '<section class="memory-section">' +
+                            '<div class="memory-section-title">重要物品</div>' +
+                            '<div class="memory-list">' + latestRound.importantItems.map(function(item) { return '<div class="memory-bullet">' + escapeHtml(item) + '</div>'; }).join("") + '</div>' +
+                        '</section>' +
+                        '<section class="memory-section">' +
+                            '<div class="memory-section-title">关系/情绪变化</div>' +
+                            '<div class="memory-list">' + latestRound.relationProgress.map(function(item) { return '<div class="memory-bullet">' + escapeHtml(item) + '</div>'; }).join("") + '</div>' +
+                        '</section>'
+                    : '<section class="memory-section"><div class="memory-section-title">本轮记忆</div><div class="memory-empty">完成一整轮对话后，这里会保留每轮总结。</div></section>';
+
+                var historyHtml = rounds.length
+                    ? '<section class="memory-section"><div class="memory-section-title">每轮记忆记录</div><div class="memory-list">' + rounds.slice().reverse().map(function(item) { return '<div class="memory-bullet">第 ' + item.roundNumber + ' 轮：' + escapeHtml(item.happened) + '</div>'; }).join("") + '</div></section>'
+                    : '';
+
+                var statusHtml = memorySummaryState.lastError
+                    ? '<section class="memory-section"><div class="memory-section-title">状态</div><div class="memory-empty">最近一次整理失败：' + escapeHtml(memorySummaryState.lastError) + '</div></section>'
+                    : (memorySummaryState.running
+                        ? '<section class="memory-section"><div class="memory-section-title">状态</div><div class="memory-empty">正在整理新的轮次记忆…</div></section>'
+                        : '');
 
                 memoryContent.innerHTML = '' +
-                    '<section class="memory-section">' +
-                        '<div class="memory-section-title">本轮总结</div>' +
-                        '<div class="memory-summary">' + escapeHtml(data.summary) + '</div>' +
-                    '</section>' +
-                    '<section class="memory-section">' +
-                        '<div class="memory-section-title">已记住的信息</div>' +
-                        '<div class="memory-list">' + factsHtml + '</div>' +
-                    '</section>' +
-                    '<section class="memory-section">' +
-                        '<div class="memory-section-title">最近状态</div>' +
-                        '<div class="memory-list">' + recentHtml + '</div>' +
-                    '</section>';
+                    roundDetailHtml +
+                    historyHtml +
+                    decadeHtml +
+                    statusHtml;
             }
 
             function focusElement(target) {
