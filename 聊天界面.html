@@ -2022,7 +2022,7 @@
                 var buckets = readHistoryBuckets();
                 buckets[chatState.chatId] = chatState.history.map(serializeHistoryItem).filter(Boolean);
                 writeHistoryBuckets(buckets);
-                scheduleMemorySummary({ silent: false });
+                scheduleMemorySummary({ silent: true });
             }
 
             function computePendingUserCount(history) {
