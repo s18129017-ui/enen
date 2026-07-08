@@ -515,9 +515,17 @@
             }
             function buildAvatarGradient(seedText){
                 var seed = (seedText || 'W').charCodeAt(0) || 87;
-                var hueA = seed % 360;
-                var hueB = (seed * 2 + 47) % 360;
-                return 'linear-gradient(135deg, hsl(' + hueA + ', 78%, 82%), hsl(' + hueB + ', 72%, 68%))';
+                var paletteIndex = seed % 3;
+
+                if (paletteIndex === 0) {
+                    return 'linear-gradient(135deg, #fff4c9, #f8dd9e)';
+                }
+
+                if (paletteIndex === 1) {
+                    return 'linear-gradient(135deg, #ffe3ee, #f2bfd3)';
+                }
+
+                return 'linear-gradient(135deg, #dff0ff, #bdd8ff)';
             }
             function applyAvatarFallback(el, name, avatarUrl){
                 if(!el) return;
