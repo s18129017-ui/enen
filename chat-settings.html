@@ -975,18 +975,80 @@ body {
                 localStorage.setItem(key, JSON.stringify(Array.isArray(list) ? list : []));
             }
 
+            function findLinkedChatAndContact() {
+                var chats = readList(CHATS_KEY);
+                var contacts = readList(CONTACTS_KEY);
+                var chat = null;
+                var contact = null;
+                var i;
+
+                if (routeContext.chatId) {
+                    for (i = 0; i < chats.length; i += 1) {
+                        if (chats[i] && chats[i].id === routeContext.chatId) {
+                            chat = chats[i];
+                            break;
+                        }
+                    }
+                }
+
+                for (i = 0; i < contacts.length; i += 1) {
+                    if (!contacts[i]) {
+                        continue;
+                    }
+
+                    if ((routeContext.contactId && contacts[i].id === routeContext.contactId) ||
+                        (chat && contacts[i].id === chat.contactId) ||
+                        contacts[i].chatId === routeContext.chatId) {
+                        contact = contacts[i];
+                        break;
+                    }
+                }
+
+                return { chat: chat, contact: contact };
+            }
+
+            function buildLinkedSettingsFallback(baseSettings) {
+                var linked = findLinkedChatAndContact();
+                var chat = linked.chat || {};
+                var contact = linked.contact || {};
+
+                if (!chat && !contact) {
+                    return null;
+                }
+
+                var settings = Object.assign({}, baseSettings || {});
+                settings.simple = Object.assign({}, defaults.simple, (baseSettings && baseSettings.simple) || {});
+                settings.avatars = Object.assign({}, baseSettings && baseSettings.avatars ? baseSettings.avatars : {});
+                settings.avatars.simple = Object.assign({}, defaults.avatars.simple, (settings.avatars && settings.avatars.simple) || {});
+                settings.bubbleStyle = Object.assign({}, defaults.bubbleStyle, (baseSettings && baseSettings.bubbleStyle) || {});
+
+                settings.simple.targetName = contact.name || chat.name || settings.simple.targetName;
+                settings.simple.callName = contact.callName || chat.callName || settings.simple.callName;
+                settings.avatars.simple.targetUrl = contact.avatar || chat.avatar || settings.avatars.simple.targetUrl || "";
+
+                return settings;
+            }
+
             function loadSettings() {
                 try {
                     if (routeContext.chatId) {
                         var buckets = readChatSettingsBuckets();
-                        return buckets[routeContext.chatId] || null;
+                        if (buckets[routeContext.chatId]) {
+                            return buckets[routeContext.chatId];
+                        }
+
+                        return buildLinkedSettingsFallback(loadSettingsFromStorage()) || null;
                     }
-                    var raw = localStorage.getItem(STORAGE_KEY);
-                    return raw ? JSON.parse(raw) : null;
+                    return loadSettingsFromStorage();
                 } catch (error) {
                     console.warn("Failed to parse chat settings:", error);
                     return null;
                 }
+            }
+
+            function loadSettingsFromStorage() {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : null;
             }
 
             function buildChatDetailHref() {
