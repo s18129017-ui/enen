@@ -664,6 +664,109 @@
         eagerApiSettingsBtn.addEventListener("click", function(event) {
             if (apiModalReady) {
                 return;
+
+(function() {
+    var MUSIC_STATE_KEY = "miffy_music_state_v1";
+    var bgAudio = null;
+    var resumePending = false;
+
+    function readState() {
+        try {
+            var raw = localStorage.getItem(MUSIC_STATE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function ensureAudio() {
+        if (bgAudio) {
+            return bgAudio;
+        }
+
+        bgAudio = document.getElementById("bgMusicPlayer");
+        if (!bgAudio) {
+            bgAudio = document.createElement("audio");
+            bgAudio.id = "bgMusicPlayer";
+            bgAudio.preload = "auto";
+            bgAudio.setAttribute("aria-hidden", "true");
+            bgAudio.style.display = "none";
+            document.body.appendChild(bgAudio);
+        }
+
+        return bgAudio;
+    }
+
+    function applyState() {
+        var state = readState();
+        var audio = ensureAudio();
+
+        if (!state || !state.src) {
+            return;
+        }
+
+        if (audio.src !== state.src) {
+            audio.src = state.src;
+        }
+
+        if (Number.isFinite(state.currentTime) && state.currentTime > 0) {
+            var seekTo = Number(state.currentTime);
+            var seekOnce = function() {
+                audio.removeEventListener("loadedmetadata", seekOnce);
+                try {
+                    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+                        audio.currentTime = Math.min(seekTo, Math.max(0, audio.duration - 0.25));
+                    } else {
+                        audio.currentTime = Math.max(0, seekTo);
+                    }
+                } catch (error) {}
+            };
+
+            if (audio.readyState >= 1) {
+                seekOnce();
+            } else {
+                audio.addEventListener("loadedmetadata", seekOnce);
+            }
+        }
+
+        if (state.playing) {
+            audio.play().then(function() {
+                resumePending = false;
+            }).catch(function() {
+                resumePending = true;
+            });
+        } else {
+            audio.pause();
+        }
+    }
+
+    function resumeIfNeeded() {
+        if (!resumePending) {
+            return;
+        }
+
+        var audio = ensureAudio();
+        audio.play().then(function() {
+            resumePending = false;
+        }).catch(function() {});
+    }
+
+    window.addEventListener("pageshow", applyState);
+    window.addEventListener("focus", applyState);
+    window.addEventListener("storage", function(event) {
+        if (event.key === MUSIC_STATE_KEY) {
+            applyState();
+        }
+    });
+    document.addEventListener("visibilitychange", function() {
+        if (!document.hidden) {
+            applyState();
+        }
+    });
+    document.addEventListener("click", resumeIfNeeded, true);
+
+    applyState();
+})();
             }
 
             event.preventDefault();

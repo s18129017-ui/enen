@@ -1,5 +1,6 @@
 const API_BASE = "https://music-api.gdstudio.xyz/api.php";
 const audio = document.getElementById('audio');
+const MUSIC_STATE_KEY = 'miffy_music_state_v1';
 let currentList = [];
 function getPageSize(){ const el = document.getElementById('page-size-select'); return el ? Number(el.value) || 20 : 20; }
 const MAX_PAGES = Infinity; // removed artificial cap to allow unlimited loading
@@ -9,6 +10,7 @@ let autoLoadAbort = false; // flag to allow user to stop auto-loading
 let currentPlayingIndex = -1;
 let lyricLines = []; // [{time: seconds, text, el}]
 let currentLyricIndex = -1;
+let lastMusicStatePersistAt = 0;
 
 function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
 const coverUrlCache = new Map();
@@ -135,6 +137,100 @@ function setLoadIndicator(text, isError) {
   if (!el) return;
   el.textContent = text || '';
   el.classList.toggle('error', !!isError);
+}
+
+function getCurrentTrackSnapshot() {
+  const track = currentList[currentPlayingIndex] || null;
+  if (!track) {
+    return null;
+  }
+
+  return {
+    id: track.id || '',
+    source: track.source || '',
+    name: track.name || '',
+    artist: Array.isArray(track.artist) ? track.artist.slice() : (track.artist || ''),
+    album: track.album || '',
+    pic_id: track.pic_id || '',
+    lyric_id: track.lyric_id || ''
+  };
+}
+
+function persistMusicState(extraState) {
+  if (!audio) {
+    return;
+  }
+
+  const now = Date.now();
+  const shouldThrottle = !extraState || !extraState.force;
+  if (shouldThrottle && now - lastMusicStatePersistAt < 800) {
+    return;
+  }
+  lastMusicStatePersistAt = now;
+
+  const track = getCurrentTrackSnapshot();
+  const playing = extraState && typeof extraState.playing === 'boolean'
+    ? extraState.playing
+    : !audio.paused && !audio.ended;
+
+  const payload = {
+    track: track,
+    src: audio.src || '',
+    currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
+    duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+    playing: playing,
+    savedAt: now
+  };
+
+  try {
+    localStorage.setItem(MUSIC_STATE_KEY, JSON.stringify(payload));
+  } catch (error) {}
+}
+
+function loadMusicState() {
+  try {
+    const raw = localStorage.getItem(MUSIC_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function restoreMusicState() {
+  if (!audio) {
+    return;
+  }
+
+  const state = loadMusicState();
+  if (!state || !state.src) {
+    return;
+  }
+
+  if (state.track && Array.isArray(state.track.artist)) {
+    state.track.artist = state.track.artist.slice();
+  }
+
+  if (!audio.src) {
+    audio.src = state.src;
+  }
+
+  const seekTo = Number(state.currentTime);
+  if (Number.isFinite(seekTo) && seekTo > 0) {
+    audio.addEventListener('loadedmetadata', function restoreSeekOnce() {
+      audio.removeEventListener('loadedmetadata', restoreSeekOnce);
+      try {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          audio.currentTime = Math.min(seekTo, Math.max(0, audio.duration - 0.25));
+        } else {
+          audio.currentTime = Math.max(0, seekTo);
+        }
+      } catch (error) {}
+    });
+  }
+
+  if (state.playing) {
+    audio.play().then(() => updatePlayUI(true)).catch(() => updatePlayUI(false));
+  }
 }
 
 async function loadNextPage() {
@@ -320,6 +416,7 @@ async function loadAndPlay(index) {
     try {
       await audio.play();
       updatePlayUI(true);
+      persistMusicState({ playing: true, force: true });
     } catch (err) {
       updatePlayUI(false);
       alert('播放失败：无法启动音频播放');
@@ -512,7 +609,10 @@ function toggleFullPlayer(show) {
 }
 
 audio.addEventListener('play', () => updatePlayUI(true));
+audio.addEventListener('play', () => persistMusicState({ playing: true }));
 audio.addEventListener('pause', () => updatePlayUI(false));
+audio.addEventListener('pause', () => persistMusicState({ playing: false }));
+audio.addEventListener('ended', () => persistMusicState({ playing: false, force: true }));
 
 function playPrev() {
   if (!currentList.length) return;
@@ -535,6 +635,7 @@ audio.ontimeupdate = () => {
   document.getElementById('prog-curr').style.width = pc + "%";
   document.getElementById('time-curr').innerText = formatTime(audio.currentTime);
   document.getElementById('time-total').innerText = formatTime(audio.duration);
+  persistMusicState({ playing: !audio.paused && !audio.ended });
 };
 
 function seek(e) {
@@ -574,6 +675,7 @@ function formatTime(s) {
 
 // 左上角返回热区（无需按钮）
 function goBackFromTopLeft() {
+  persistMusicState({ playing: !audio.paused && !audio.ended, force: true });
   document.body.classList.add('back-feedback');
   if (navigator.vibrate) navigator.vibrate(15);
   setTimeout(() => {
@@ -614,6 +716,20 @@ document.addEventListener('touchend', (e) => {
   const inTopLeft = t.clientX <= 64 && t.clientY <= 64;
   if (inTopLeft) goBackFromTopLeft();
 }, { passive: true });
+
+window.addEventListener('pagehide', function() {
+  persistMusicState({ playing: !audio.paused && !audio.ended, force: true });
+});
+
+window.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    restoreMusicState();
+  } else {
+    persistMusicState({ playing: !audio.paused && !audio.ended });
+  }
+});
+
+restoreMusicState();
 
 // 其他早期的加载/停止/分页控件可能不存在 — 新脚本保留了对这些元素存在性的检查
 
