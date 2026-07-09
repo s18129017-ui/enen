@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Music Host</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.02;
+      pointer-events: none;
+      user-select: none;
+    }
+    .hint {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.75);
+    }
+  </style>
+</head>
+<body>
+  <div class="hint">后台播放中</div>
+  <audio id="backgroundAudio" preload="auto"></audio>
+  <script>
+    (function() {
+      var STATE_KEY = "miffy_music_state_v1";
+      var COMMAND_KEY = "miffy_music_command_v1";
+      var audio = document.getElementById("backgroundAudio");
+      var pendingSeek = null;
+      var lastWriteAt = 0;
+
+      function readState() {
+        try {
+          var raw = localStorage.getItem(STATE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function writeState(force) {
+        var now = Date.now();
+        if (!force && now - lastWriteAt < 300) {
+          return;
+        }
+        lastWriteAt = now;
+        try {
+          localStorage.setItem(STATE_KEY, JSON.stringify({
+            src: audio.src || "",
+            currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
+            duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+            playing: !audio.paused && !audio.ended,
+            savedAt: now
+          }));
+        } catch (error) {}
+      }
+
+      function applySeek() {
+        if (pendingSeek === null) {
+          return;
+        }
+
+        try {
+          if (Number.isFinite(audio.duration) && audio.duration > 0) {
+            audio.currentTime = Math.min(Math.max(0, pendingSeek), Math.max(0, audio.duration - 0.25));
+          } else {
+            audio.currentTime = Math.max(0, pendingSeek);
+          }
+        } catch (error) {}
+
+        pendingSeek = null;
+      }
+
+      function applyCommand(command) {
+        if (!command || typeof command !== "object") {
+          return;
+        }
+
+        if (command.type === "load-play") {
+          if (command.src) {
+            audio.src = command.src;
+          }
+          pendingSeek = Number.isFinite(command.currentTime) ? Number(command.currentTime) : 0;
+          if (audio.readyState >= 1) {
+            applySeek();
+          }
+          if (command.shouldPlay !== false) {
+            audio.play().catch(function() {});
+          }
+          writeState(true);
+          return;
+        }
+
+        if (command.type === "play") {
+          applySeek();
+          audio.play().catch(function() {});
+          return;
+        }
+
+        if (command.type === "pause") {
+          audio.pause();
+          writeState(true);
+          return;
+        }
+
+        if (command.type === "seek" && Number.isFinite(command.currentTime)) {
+          pendingSeek = Number(command.currentTime);
+          applySeek();
+          writeState(true);
+        }
+      }
+
+      function restoreLastState() {
+        var state = readState();
+        if (!state || !state.src) {
+          return;
+        }
+
+        audio.src = state.src;
+        pendingSeek = Number.isFinite(state.currentTime) ? Number(state.currentTime) : 0;
+        audio.addEventListener("loadedmetadata", function restoreSeekOnce() {
+          audio.removeEventListener("loadedmetadata", restoreSeekOnce);
+          applySeek();
+        });
+
+        if (state.playing) {
+          audio.play().catch(function() {});
+        }
+      }
+
+      window.addEventListener("storage", function(event) {
+        if (event.key !== COMMAND_KEY || !event.newValue) {
+          return;
+        }
+
+        try {
+          applyCommand(JSON.parse(event.newValue));
+        } catch (error) {}
+      });
+
+      audio.addEventListener("loadedmetadata", function() {
+        applySeek();
+        writeState(true);
+      });
+      audio.addEventListener("play", function() { writeState(true); });
+      audio.addEventListener("pause", function() { writeState(true); });
+      audio.addEventListener("ended", function() { writeState(true); });
+      audio.addEventListener("timeupdate", function() { writeState(false); });
+
+      restoreLastState();
+      writeState(true);
+    })();
+  </script>
+</body>
+</html>

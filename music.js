@@ -1,6 +1,7 @@
 const API_BASE = "https://music-api.gdstudio.xyz/api.php";
-const audio = document.getElementById('audio');
 const MUSIC_STATE_KEY = 'miffy_music_state_v1';
+const MUSIC_COMMAND_KEY = 'miffy_music_command_v1';
+const PLAYBACK_HOST_URL = 'music-host.html';
 let currentList = [];
 function getPageSize(){ const el = document.getElementById('page-size-select'); return el ? Number(el.value) || 20 : 20; }
 const MAX_PAGES = Infinity; // removed artificial cap to allow unlimited loading
@@ -11,6 +12,7 @@ let currentPlayingIndex = -1;
 let lyricLines = []; // [{time: seconds, text, el}]
 let currentLyricIndex = -1;
 let lastMusicStatePersistAt = 0;
+let playbackHostWindow = null;
 
 function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
 const coverUrlCache = new Map();
@@ -137,6 +139,84 @@ function setLoadIndicator(text, isError) {
   if (!el) return;
   el.textContent = text || '';
   el.classList.toggle('error', !!isError);
+}
+
+function openPlaybackHost() {
+  if (playbackHostWindow && !playbackHostWindow.closed) {
+    return playbackHostWindow;
+  }
+
+  playbackHostWindow = window.open(PLAYBACK_HOST_URL, 'miffy_music_host', 'width=360,height=220,left=40,top=40');
+  if (!playbackHostWindow) {
+    throw new Error('无法打开后台播放窗口，请允许弹出窗口后重试');
+  }
+
+  return playbackHostWindow;
+}
+
+function sendPlaybackCommand(command) {
+  var payload = Object.assign({
+    requestId: 'cmd_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+    sentAt: Date.now()
+  }, command || {});
+
+  try {
+    localStorage.setItem(MUSIC_COMMAND_KEY, JSON.stringify(payload));
+  } catch (error) {}
+
+  return payload;
+}
+
+function readPlaybackState() {
+  try {
+    var raw = localStorage.getItem(MUSIC_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function applyPlaybackState(state) {
+  if (!state) {
+    return;
+  }
+
+  var title = state.track && state.track.name ? state.track.name : '';
+  var artistText = state.track && state.track.artist
+    ? (Array.isArray(state.track.artist) ? state.track.artist.join(' / ') : String(state.track.artist))
+    : '';
+
+  if (title) {
+    var miniTitleEl = document.getElementById('mini-title');
+    var fullTitleEl = document.getElementById('full-title');
+    if (miniTitleEl) miniTitleEl.innerText = title;
+    if (fullTitleEl) fullTitleEl.innerText = title;
+  }
+
+  if (artistText) {
+    var miniArtistEl = document.getElementById('mini-artist');
+    var fullArtistEl = document.getElementById('full-artist');
+    if (miniArtistEl) miniArtistEl.innerText = artistText;
+    if (fullArtistEl) fullArtistEl.innerText = artistText;
+  }
+
+  if (Number.isFinite(state.duration) && state.duration > 0) {
+    var timeTotalEl = document.getElementById('time-total');
+    if (timeTotalEl) {
+      timeTotalEl.innerText = formatTime(state.duration);
+    }
+  }
+
+  if (Number.isFinite(state.currentTime) && Number.isFinite(state.duration) && state.duration > 0) {
+    var pc = (state.currentTime / state.duration) * 100;
+    var progEl = document.getElementById('prog-curr');
+    var timeCurrEl = document.getElementById('time-curr');
+    if (progEl) progEl.style.width = pc + '%';
+    if (timeCurrEl) timeCurrEl.innerText = formatTime(state.currentTime);
+    try { if (lyricLines && lyricLines.length) updateLyricHighlight(state.currentTime); } catch (error) {}
+  }
+
+  updatePlayUI(!!state.playing);
 }
 
 function getCurrentTrackSnapshot() {
@@ -411,17 +491,24 @@ async function loadAndPlay(index) {
     // 2. 获取封面
     const picUrl = await resolveCoverUrl(source, track.pic_id, 500);
     
-    // 3. 更新播放地址
-    audio.src = urlData.url;
-    try {
-      await audio.play();
-      updatePlayUI(true);
-      persistMusicState({ playing: true, force: true });
-    } catch (err) {
-      updatePlayUI(false);
-      alert('播放失败：无法启动音频播放');
-      return;
-    }
+    // 3. 交给后台宿主播放
+    openPlaybackHost();
+    sendPlaybackCommand({
+      type: 'load-play',
+      src: urlData.url,
+      track: {
+        id: track.id || '',
+        source: source || '',
+        name: track.name || '',
+        artist: Array.isArray(track.artist) ? track.artist.slice() : (track.artist || ''),
+        album: track.album || '',
+        pic_id: track.pic_id || '',
+        lyric_id: track.lyric_id || ''
+      },
+      currentTime: 0,
+      shouldPlay: true
+    });
+    updatePlayUI(true);
 
     // 4. 更新封面UI
     if (picUrl) {
@@ -579,14 +666,22 @@ function toggleLyricPage(show) {
 // --- UI 交互控制 ---
 function togglePlay() {
   // 若未加载音频但有搜索结果，点击播放默认播放第一首
-  if (!audio.src && currentList.length > 0) {
+  var state = readPlaybackState();
+  if ((!state || !state.src) && currentList.length > 0) {
     loadAndPlay(Math.max(currentPlayingIndex, 0));
     return;
   }
-  if (audio.paused) {
-    audio.play().then(() => updatePlayUI(true)).catch(() => updatePlayUI(false));
+  try {
+    openPlaybackHost();
+  } catch (error) {
+    alert(error.message || '无法启动后台播放');
+    return;
+  }
+  if (!state || state.playing === false) {
+    sendPlaybackCommand({ type: 'play' });
+    updatePlayUI(true);
   } else {
-    audio.pause();
+    sendPlaybackCommand({ type: 'pause' });
     updatePlayUI(false);
   }
 }
@@ -608,11 +703,19 @@ function toggleFullPlayer(show) {
   if (!show) toggleLyricPage(false);
 }
 
-audio.addEventListener('play', () => updatePlayUI(true));
-audio.addEventListener('play', () => persistMusicState({ playing: true }));
-audio.addEventListener('pause', () => updatePlayUI(false));
-audio.addEventListener('pause', () => persistMusicState({ playing: false }));
-audio.addEventListener('ended', () => persistMusicState({ playing: false, force: true }));
+window.addEventListener('storage', (event) => {
+  if (event.key !== MUSIC_STATE_KEY || !event.newValue) return;
+  try {
+    applyPlaybackState(JSON.parse(event.newValue));
+  } catch (error) {}
+});
+
+window.setInterval(() => {
+  var state = readPlaybackState();
+  if (state) {
+    applyPlaybackState(state);
+  }
+}, 800);
 
 function playPrev() {
   if (!currentList.length) return;
@@ -626,22 +729,17 @@ function playNext() {
   loadAndPlay(nextIndex);
 }
 
-// 进度条控制
-audio.ontimeupdate = () => {
-  if(!audio.duration) return;
-  // 更新歌词高亮（如果有解析出的歌词）
-  try { updateLyricHighlight(audio.currentTime); } catch(e){}
-  const pc = (audio.currentTime / audio.duration) * 100;
-  document.getElementById('prog-curr').style.width = pc + "%";
-  document.getElementById('time-curr').innerText = formatTime(audio.currentTime);
-  document.getElementById('time-total').innerText = formatTime(audio.duration);
-  persistMusicState({ playing: !audio.paused && !audio.ended });
-};
+// 进度条和播放状态由后台宿主同步回本页
 
 function seek(e) {
   const rect = e.currentTarget.getBoundingClientRect();
   const x = e.clientX - rect.left;
-  audio.currentTime = (x / rect.width) * audio.duration;
+  var state = readPlaybackState();
+  if (!state || !state.duration) return;
+  sendPlaybackCommand({
+    type: 'seek',
+    currentTime: (x / rect.width) * state.duration
+  });
 }
 
 function formatTime(s) {
@@ -675,7 +773,6 @@ function formatTime(s) {
 
 // 左上角返回热区（无需按钮）
 function goBackFromTopLeft() {
-  persistMusicState({ playing: !audio.paused && !audio.ended, force: true });
   document.body.classList.add('back-feedback');
   if (navigator.vibrate) navigator.vibrate(15);
   setTimeout(() => {
@@ -718,18 +815,27 @@ document.addEventListener('touchend', (e) => {
 }, { passive: true });
 
 window.addEventListener('pagehide', function() {
-  persistMusicState({ playing: !audio.paused && !audio.ended, force: true });
+  var state = readPlaybackState();
+  if (state) {
+    try {
+      localStorage.setItem(MUSIC_STATE_KEY, JSON.stringify(state));
+    } catch (error) {}
+  }
 });
 
 window.addEventListener('visibilitychange', function() {
   if (!document.hidden) {
-    restoreMusicState();
-  } else {
-    persistMusicState({ playing: !audio.paused && !audio.ended });
+    var state = readPlaybackState();
+    if (state) {
+      applyPlaybackState(state);
+    }
   }
 });
 
-restoreMusicState();
+var initialPlaybackState = readPlaybackState();
+if (initialPlaybackState) {
+  applyPlaybackState(initialPlaybackState);
+}
 
 // 其他早期的加载/停止/分页控件可能不存在 — 新脚本保留了对这些元素存在性的检查
 
